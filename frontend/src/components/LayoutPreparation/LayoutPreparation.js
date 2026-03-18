@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Xarrow, { Xwrapper } from 'react-xarrows';
-import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import { TransformWrapper, TransformComponent, useTransformContext } from 'react-zoom-pan-pinch';
 import { Pencil, LayoutGrid, Trash2, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import StationBox from './StationBox/StationBox';
 import BypassIcon from './BypassIcon/BypassIcon';
@@ -93,6 +93,65 @@ function stateFromApi(apiLayout) {
   }));
 
   return { boxes, bypassIcons, connections };
+}
+
+// Inner component — must live inside TransformWrapper to call useTransformContext
+function CanvasItems({
+  boxes, bypassIcons, connections,
+  onPortMouseDown,
+  onBoxPositionChange, onDeleteBox,
+  onBypassPositionChange, onDeleteBypass,
+  onDeleteConnection,
+}) {
+  const { transformState } = useTransformContext();
+  const scale = transformState?.scale || 1;
+
+  return (
+    <Xwrapper>
+      {bypassIcons.map((icon) => (
+        <BypassIcon
+          key={icon.id}
+          id={icon.id}
+          position={icon.position}
+          onPositionChange={onBypassPositionChange}
+          onDelete={onDeleteBypass}
+          onPortMouseDown={onPortMouseDown}
+          canvasScale={scale}
+        />
+      ))}
+
+      {boxes.map((box) => (
+        <StationBox
+          key={box.id}
+          id={box.id}
+          name={box.name}
+          stationIds={box.stationIds}
+          position={box.position}
+          onPositionChange={onBoxPositionChange}
+          onDelete={onDeleteBox}
+          onPortMouseDown={onPortMouseDown}
+          canvasScale={scale}
+        />
+      ))}
+
+      {connections.map((conn) => (
+        <Xarrow
+          key={conn.id}
+          start={conn.fromId}
+          end={conn.toId}
+          color="#1a2744"
+          strokeWidth={2}
+          path="smooth"
+          headSize={6}
+          passProps={{
+            onClick: () => onDeleteConnection(conn.id),
+            style: { cursor: 'pointer' },
+            title: 'Click to remove connection',
+          }}
+        />
+      ))}
+    </Xwrapper>
+  );
 }
 
 function LayoutPreparation({
@@ -362,7 +421,7 @@ function LayoutPreparation({
           wheel={{ step: 0.08 }}
           panning={{ excluded: ['station-box-header', 'bypass-drag-handle', 'station-port', 'bypass-port'] }}
         >
-          {({ zoomIn, zoomOut, resetTransform, state: transformState }) => (
+          {({ zoomIn, zoomOut, resetTransform }) => (
             <>
               <TransformComponent
                 wrapperStyle={{ width: '100%', height: '100%' }}
@@ -372,60 +431,28 @@ function LayoutPreparation({
                   className="layout-virtual-canvas"
                   style={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
                 >
-                  <Xwrapper>
-                    {boxes.length === 0 && bypassIcons.length === 0 && (
-                      <div className="layout-canvas-empty">
-                        <div className="layout-canvas-empty-icon">
-                          <LayoutGrid size={52} strokeWidth={1} />
-                        </div>
-                        <p>No station boxes yet.</p>
-                        <p>Use <strong>Add Box</strong> in the left panel to start.</p>
+                  {boxes.length === 0 && bypassIcons.length === 0 && (
+                    <div className="layout-canvas-empty">
+                      <div className="layout-canvas-empty-icon">
+                        <LayoutGrid size={52} strokeWidth={1} />
                       </div>
-                    )}
+                      <p>No station boxes yet.</p>
+                      <p>Use <strong>Add Box</strong> in the left panel to start.</p>
+                    </div>
+                  )}
 
-                    {bypassIcons.map((icon) => (
-                      <BypassIcon
-                        key={icon.id}
-                        id={icon.id}
-                        position={icon.position}
-                        onPositionChange={handleBypassPositionChange}
-                        onDelete={handleDeleteBypass}
-                        onPortMouseDown={handlePortMouseDown}
-                        canvasScale={transformState.scale}
-                      />
-                    ))}
-
-                    {boxes.map((box) => (
-                      <StationBox
-                        key={box.id}
-                        id={box.id}
-                        name={box.name}
-                        stationIds={box.stationIds}
-                        position={box.position}
-                        onPositionChange={handleBoxPositionChange}
-                        onDelete={handleDeleteBox}
-                        onPortMouseDown={handlePortMouseDown}
-                        canvasScale={transformState.scale}
-                      />
-                    ))}
-
-                    {connections.map((conn) => (
-                      <Xarrow
-                        key={conn.id}
-                        start={conn.fromId}
-                        end={conn.toId}
-                        color="#1a2744"
-                        strokeWidth={2}
-                        path="smooth"
-                        headSize={6}
-                        passProps={{
-                          onClick: () => handleDeleteConnection(conn.id),
-                          style: { cursor: 'pointer' },
-                          title: 'Click to remove connection',
-                        }}
-                      />
-                    ))}
-                  </Xwrapper>
+                  {/* CanvasItems reads scale via useTransformContext */}
+                  <CanvasItems
+                    boxes={boxes}
+                    bypassIcons={bypassIcons}
+                    connections={connections}
+                    onPortMouseDown={handlePortMouseDown}
+                    onBoxPositionChange={handleBoxPositionChange}
+                    onDeleteBox={handleDeleteBox}
+                    onBypassPositionChange={handleBypassPositionChange}
+                    onDeleteBypass={handleDeleteBypass}
+                    onDeleteConnection={handleDeleteConnection}
+                  />
                 </div>
               </TransformComponent>
 
