@@ -106,14 +106,9 @@ function StationBox({
                 </tr>
               </thead>
               <tbody>
-                {/* Z row — label is white so it appears invisible */}
+                {/* Z row — single merged cell across all stations, white = invisible */}
                 <tr>
-                  {stationIds.map((sid) => (
-                    <React.Fragment key={sid}>
-                      <td className="station-grid-label station-grid-label--z">Z</td>
-                      <td className="station-grid-value" />
-                    </React.Fragment>
-                  ))}
+                  <td colSpan={stationIds.length * 2} className="station-grid-label station-grid-label--z">Z</td>
                 </tr>
                 {['M', 'P', 'D', 'U'].map((label) => (
                   <tr key={label}>
