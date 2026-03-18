@@ -55,6 +55,7 @@ def create_dynamic_table(name, columns, constraints=None, indexes=None):
 layout_id_seq = Sequence("layout_id_seq")
 box_id_seq = Sequence("box_id_seq")
 icon_id_seq = Sequence("icon_id_seq")
+conn_id_seq = Sequence("conn_id_seq")
 
 
 # ── layouts ───────────────────────────────────────────────────────────────────
@@ -164,6 +165,51 @@ create_dynamic_table(
     ],
     indexes=[
         Index("idx_bypass_icons_layout_id", "layout_id"),
+    ],
+)
+
+
+# ── box_connections ───────────────────────────────────────────────────────────
+
+create_dynamic_table(
+    "box_connections",
+    [
+        Column(
+            "id",
+            Integer,
+            conn_id_seq,
+            primary_key=True,
+            server_default=conn_id_seq.next_value(),
+        ),
+        Column(
+            "layout_id",
+            Integer,
+            ForeignKey("layouts.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        Column(
+            "from_box_id",
+            Integer,
+            ForeignKey("station_boxes.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        Column(
+            "to_box_id",
+            Integer,
+            ForeignKey("station_boxes.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        Column(
+            "created_at",
+            DateTime,
+            default=datetime.datetime.utcnow,
+            nullable=False,
+        ),
+    ],
+    indexes=[
+        Index("idx_box_connections_layout_id", "layout_id"),
+        Index("idx_box_connections_from", "from_box_id"),
+        Index("idx_box_connections_to", "to_box_id"),
     ],
 )
 

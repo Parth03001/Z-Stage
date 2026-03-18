@@ -3,7 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
-# ── StationBox ──────────────────────────────────────────────────────────────
+# ── StationBox ───────────────────────────────────────────────────────────────
 
 class StationBoxBase(BaseModel):
     name: str
@@ -60,7 +60,19 @@ class BypassIconOut(BypassIconBase):
     model_config = {"from_attributes": True}
 
 
-# ── Layout ───────────────────────────────────────────────────────────────────
+# ── Connection ────────────────────────────────────────────────────────────────
+
+class ConnectionOut(BaseModel):
+    id: int
+    layout_id: int
+    from_box_id: int
+    to_box_id: int
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+# ── Layout ────────────────────────────────────────────────────────────────────
 
 class LayoutBase(BaseModel):
     name: str
@@ -80,6 +92,7 @@ class LayoutOut(LayoutBase):
     updated_at: datetime
     station_boxes: List[StationBoxOut] = []
     bypass_icons: List[BypassIconOut] = []
+    connections: List[ConnectionOut] = []
 
     model_config = {"from_attributes": True}
 
@@ -90,3 +103,33 @@ class LayoutSummary(LayoutBase):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# ── Snapshot (full layout save) ───────────────────────────────────────────────
+
+class SnapshotBox(BaseModel):
+    local_id: str
+    name: str
+    prefix: str
+    station_count: int
+    position_x: float = 0.0
+    position_y: float = 0.0
+    order_index: int = 0
+
+
+class SnapshotBypassIcon(BaseModel):
+    local_id: str
+    position_x: float = 0.0
+    position_y: float = 0.0
+
+
+class SnapshotConnection(BaseModel):
+    from_local_id: str
+    to_local_id: str
+
+
+class LayoutSnapshotCreate(BaseModel):
+    name: str
+    boxes: List[SnapshotBox] = []
+    bypass_icons: List[SnapshotBypassIcon] = []
+    connections: List[SnapshotConnection] = []

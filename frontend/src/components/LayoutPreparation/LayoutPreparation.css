@@ -10,7 +10,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
+  padding: 10px 20px;
   background-color: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
@@ -22,8 +22,14 @@
   align-items: center;
 }
 
+.layout-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .layout-name {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: #1a202c;
   margin: 0;
@@ -38,13 +44,24 @@
 }
 
 .layout-name-edit-icon {
-  font-size: 13px;
+  font-size: 12px;
   opacity: 0;
   transition: opacity 0.15s;
 }
 
+.layout-saved-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background-color: #c6f6d5;
+  color: #276749;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .layout-name-input {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: #1a202c;
   border: 1px solid #4299e1;
@@ -53,50 +70,23 @@
   outline: none;
 }
 
-.layout-toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.layout-connect-hint {
+  font-size: 12px;
+  color: #276749;
+  font-weight: 600;
+  background-color: #c6f6d5;
+  padding: 4px 10px;
+  border-radius: 12px;
 }
 
 .toolbar-btn {
-  padding: 8px 16px;
+  padding: 7px 14px;
   border-radius: 5px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   border: none;
-  transition: background-color 0.15s, transform 0.1s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.toolbar-btn:active {
-  transform: scale(0.97);
-}
-
-.toolbar-btn--add {
-  background-color: #1a2744;
-  color: #ffffff;
-}
-
-.toolbar-btn--add:hover {
-  background-color: #2a3f6f;
-}
-
-.toolbar-btn--bypass {
-  background-color: #f6c90e;
-  color: #1a2744;
-  border: 1px solid #c9a000;
-}
-
-.toolbar-btn--bypass:hover {
-  background-color: #eab308;
-}
-
-.toolbar-btn-diamond {
-  font-size: 14px;
+  transition: background-color 0.15s;
 }
 
 .toolbar-btn--clear {
@@ -109,12 +99,12 @@
   background-color: #fed7d7;
 }
 
-/* Stats */
+/* Stats bar */
 .layout-stats {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 6px 20px;
+  gap: 20px;
+  padding: 5px 20px;
   background-color: #f7fafc;
   border-bottom: 1px solid #e2e8f0;
   font-size: 12px;
@@ -124,11 +114,11 @@
 
 .layout-stat strong {
   color: #1a202c;
-  font-size: 13px;
 }
 
-.layout-stat--hint {
-  color: #a0aec0;
+.layout-stat--connect-mode {
+  color: #276749;
+  font-weight: 600;
   font-style: italic;
 }
 
@@ -142,6 +132,10 @@
     linear-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.3) 1px, transparent 1px);
   background-size: 40px 40px;
+}
+
+.layout-canvas--connect-mode {
+  cursor: crosshair;
 }
 
 .layout-canvas-empty {

@@ -148,3 +148,32 @@ class BypassIconQueries:
     DELETE_ICON = "DELETE FROM bypass_icons WHERE id = :icon_id"
 
     CHECK_EXISTS = "SELECT id FROM bypass_icons WHERE id = :icon_id"
+
+
+# ── Connection queries ────────────────────────────────────────────────────────
+
+class ConnectionQueries:
+    LIST_BY_LAYOUT = """
+        SELECT id, layout_id, from_box_id, to_box_id, created_at
+        FROM box_connections
+        WHERE layout_id = :layout_id
+        ORDER BY id
+    """
+
+    CREATE_CONNECTION = """
+        INSERT INTO box_connections (layout_id, from_box_id, to_box_id, created_at)
+        VALUES (:layout_id, :from_box_id, :to_box_id, NOW())
+        RETURNING id, layout_id, from_box_id, to_box_id, created_at
+    """
+
+    DELETE_CONNECTION = "DELETE FROM box_connections WHERE id = :conn_id"
+
+    CHECK_EXISTS = "SELECT id FROM box_connections WHERE id = :conn_id"
+
+
+# ── Snapshot queries (full layout sync) ───────────────────────────────────────
+
+class SnapshotQueries:
+    DELETE_CONNECTIONS = "DELETE FROM box_connections WHERE layout_id = :layout_id"
+    DELETE_BYPASS_ICONS = "DELETE FROM bypass_icons WHERE layout_id = :layout_id"
+    DELETE_STATION_BOXES = "DELETE FROM station_boxes WHERE layout_id = :layout_id"

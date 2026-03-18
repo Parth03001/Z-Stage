@@ -13,6 +13,9 @@ export const layoutApi = {
   createLayout: (data) => api.post('/layouts', data),
   updateLayout: (id, data) => api.put(`/layouts/${id}`, data),
   deleteLayout: (id) => api.delete(`/layouts/${id}`),
+  // Snapshot: full canvas save in one request
+  createSnapshot: (data) => api.post('/layouts/snapshot', data),
+  updateSnapshot: (id, data) => api.put(`/layouts/${id}/snapshot`, data),
 };
 
 export const stationBoxApi = {

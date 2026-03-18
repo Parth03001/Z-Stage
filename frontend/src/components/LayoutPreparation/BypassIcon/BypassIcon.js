@@ -1,15 +1,16 @@
 import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
+import { useXarrow } from 'react-xarrows';
 import './BypassIcon.css';
 
 function BypassIcon({ id, position, onPositionChange, onDelete }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const nodeRef = useRef(null);
+  const updateXarrow = useXarrow();
 
   const handleDragStop = (e, data) => {
-    if (onPositionChange) {
-      onPositionChange(id, { x: data.x, y: data.y });
-    }
+    updateXarrow();
+    if (onPositionChange) onPositionChange(id, { x: data.x, y: data.y });
   };
 
   const toggleExpand = (e) => {
@@ -21,10 +22,11 @@ function BypassIcon({ id, position, onPositionChange, onDelete }) {
     <Draggable
       nodeRef={nodeRef}
       defaultPosition={position || { x: 0, y: 0 }}
+      onDrag={updateXarrow}
       onStop={handleDragStop}
       handle=".bypass-drag-handle"
     >
-      <div ref={nodeRef} className="bypass-icon-wrapper">
+      <div ref={nodeRef} id={id} className="bypass-icon-wrapper">
         <div className="bypass-drag-handle bypass-diamond" onClick={toggleExpand} title="Bypass / Connect">
           <span className="bypass-diamond-inner">B</span>
         </div>
