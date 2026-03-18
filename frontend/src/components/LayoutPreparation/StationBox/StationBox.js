@@ -97,20 +97,36 @@ function StationBox({
 
         {!collapsed && (
           <div className="station-box-body">
-            <div className="station-grid">
-              <div className="station-grid-header-row">
-                {stationIds.map((sid) => (
-                  <div key={sid} className="station-grid-header-cell">{sid}</div>
-                ))}
-              </div>
-              {[0, 1, 2].map((rowIdx) => (
-                <div key={rowIdx} className="station-grid-data-row">
+            <table className="station-grid">
+              <thead>
+                <tr>
                   {stationIds.map((sid) => (
-                    <div key={sid} className="station-grid-data-cell" />
+                    <th key={sid} colSpan={2} className="station-grid-header-cell">{sid}</th>
                   ))}
-                </div>
-              ))}
-            </div>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Z row — label is white so it appears invisible */}
+                <tr>
+                  {stationIds.map((sid) => (
+                    <React.Fragment key={sid}>
+                      <td className="station-grid-label station-grid-label--z">Z</td>
+                      <td className="station-grid-value" />
+                    </React.Fragment>
+                  ))}
+                </tr>
+                {['M', 'P', 'D', 'U'].map((label) => (
+                  <tr key={label}>
+                    {stationIds.map((sid) => (
+                      <React.Fragment key={sid}>
+                        <td className="station-grid-label">{label}</td>
+                        <td className="station-grid-value" />
+                      </React.Fragment>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

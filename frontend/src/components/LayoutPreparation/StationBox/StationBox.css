@@ -5,8 +5,8 @@
   border-radius: 4px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   /* Width is determined by content (stationCount × 40px columns).
-     Height is fixed to exactly 4 grid cells = 160px so boxes align to the grid. */
-  height: 160px;
+     Height is fixed to exactly 5 grid cells = 200px so boxes align to the grid. */
+  height: 200px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -84,24 +84,20 @@
 }
 
 .station-grid {
-  display: flex;
-  flex-direction: column;
+  border-collapse: collapse;
   width: max-content;
+  table-layout: fixed;
 }
 
-.station-grid-header-row {
-  display: flex;
-  background-color: #276749;
-}
-
+/* Station ID header — spans 2 sub-columns (40px total) */
 .station-grid-header-cell {
   width: 40px;
-  min-width: 40px;
   padding: 3px 2px;
   text-align: center;
   font-size: 10px;
   font-weight: 700;
   color: #ffffff;
+  background-color: #276749;
   border-right: 1px solid #1c4532;
   white-space: nowrap;
   overflow: hidden;
@@ -112,20 +108,40 @@
   border-right: none;
 }
 
-.station-grid-data-row {
-  display: flex;
-  border-top: 1px solid #e2e8f0;
+/* Left label sub-column (M / P / D / U / Z) */
+.station-grid-label {
+  width: 14px;
+  min-width: 14px;
+  height: 20px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 9px;
+  font-weight: 700;
+  color: #4a5568;
+  background-color: #edf2f7;
+  border-right: 1px solid #cbd5e0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.station-grid-data-cell {
-  width: 40px;
-  min-width: 40px;
-  height: 28px;
-  border-right: 1px solid #e2e8f0;
+/* Z label is white — invisible but cell still occupies space */
+.station-grid-label--z {
+  color: #ffffff;
   background-color: #ffffff;
 }
 
-.station-grid-data-cell:last-child {
+/* Right value sub-column */
+.station-grid-value {
+  width: 26px;
+  min-width: 26px;
+  height: 20px;
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Remove trailing borders on last station */
+.station-grid tr td:last-child,
+.station-grid tr th:last-child {
   border-right: none;
 }
 
