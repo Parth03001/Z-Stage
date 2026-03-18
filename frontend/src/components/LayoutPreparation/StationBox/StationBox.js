@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Draggable from 'react-draggable';
 import { useXarrow } from 'react-xarrows';
 import './StationBox.css';
@@ -16,7 +16,7 @@ function StationBox({
   name,
   prefix,
   stationCount,
-  position,
+  position: parentPosition,   // controlled by parent (after snap)
   onPositionChange,
   onDelete,
   connectMode,
@@ -24,12 +24,27 @@ function StationBox({
   onBoxClick,
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  // Local position drives Draggable (smooth during drag).
+  // Syncs back to parentPosition after parent snaps/validates on stop.
+  const [pos, setPos] = useState(parentPosition || { x: 0, y: 0 });
   const nodeRef = useRef(null);
   const updateXarrow = useXarrow();
   const stationIds = buildStationIds(prefix, stationCount);
 
-  const handleDragStop = (e, data) => {
+  // When parent corrects the position (snap / gap enforcement), sync it down.
+  useEffect(() => {
+    if (parentPosition) setPos(parentPosition);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parentPosition?.x, parentPosition?.y]);
+
+  const handleDrag = (e, data) => {
+    setPos({ x: data.x, y: data.y });
     updateXarrow();
+  };
+
+  const handleStop = (e, data) => {
+    // Parent computes the snapped + gap-enforced position and pushes it back
+    // via parentPosition → triggers the useEffect above.
     if (onPositionChange) onPositionChange(id, { x: data.x, y: data.y });
   };
 
@@ -40,9 +55,9 @@ function StationBox({
   return (
     <Draggable
       nodeRef={nodeRef}
-      defaultPosition={position || { x: 0, y: 0 }}
-      onDrag={updateXarrow}
-      onStop={handleDragStop}
+      position={pos}
+      onDrag={handleDrag}
+      onStop={handleStop}
       handle=".station-box-header"
       bounds="parent"
       disabled={connectMode}

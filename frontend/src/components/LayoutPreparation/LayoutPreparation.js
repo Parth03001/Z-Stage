@@ -9,6 +9,66 @@ import './LayoutPreparation.css';
 let nextId = 1;
 const uid = () => `loc-${nextId++}`;
 
+// ── Grid constants ────────────────────────────────────────────────────────────
+const GRID = 40;          // canvas background cell size (px)
+const MIN_GAP = GRID;     // required clear space between any two boxes
+
+// Estimate rendered box dimensions from station count
+const boxSize = (stationCount) => ({
+  w: Math.max(200, stationCount * 52),
+  h: 142,   // header(30) + id-row(26) + 3 data rows(28*3) + border(2)
+});
+
+// Snap a raw pixel value to the nearest grid multiple
+const snap = (v) => Math.round(v / GRID) * GRID;
+
+// Returns true when box A and B overlap (including required gap)
+const overlaps = (a, b) => {
+  const sa = boxSize(a.stationCount);
+  const sb = boxSize(b.stationCount);
+  return !(
+    a.position.x + sa.w + MIN_GAP <= b.position.x ||
+    b.position.x + sb.w + MIN_GAP <= a.position.x ||
+    a.position.y + sa.h + MIN_GAP <= b.position.y ||
+    b.position.y + sb.h + MIN_GAP <= a.position.y
+  );
+};
+
+// Find the nearest valid snapped position for `box` given `others`.
+// Starts from `rawPos`, snaps it, then spirals outward grid-cell by grid-cell
+// until a non-overlapping position is found.
+const findValidPos = (box, rawPos, others) => {
+  const origin = { x: Math.max(0, snap(rawPos.x)), y: Math.max(0, snap(rawPos.y)) };
+
+  for (let radius = 0; radius <= 30; radius++) {
+    // Build the perimeter of the square at this radius
+    const candidates = [];
+    if (radius === 0) {
+      candidates.push(origin);
+    } else {
+      for (let i = -radius; i <= radius; i++) {
+        candidates.push(
+          { x: origin.x + i * GRID, y: origin.y - radius * GRID },
+          { x: origin.x + i * GRID, y: origin.y + radius * GRID },
+        );
+        if (i !== -radius && i !== radius) {
+          candidates.push(
+            { x: origin.x - radius * GRID, y: origin.y + i * GRID },
+            { x: origin.x + radius * GRID, y: origin.y + i * GRID },
+          );
+        }
+      }
+    }
+
+    for (const pos of candidates) {
+      if (pos.x < 0 || pos.y < 0) continue;
+      const candidate = { ...box, position: pos };
+      if (!others.some((o) => overlaps(candidate, o))) return pos;
+    }
+  }
+  return origin; // fallback (shouldn't reach here)
+};
+
 /**
  * Build local state from a LayoutOut response (loaded from DB).
  * All IDs are prefixed with "db-" so they never clash with local "loc-" IDs.
@@ -82,22 +142,30 @@ function LayoutPreparation({
   // ── Box actions ─────────────────────────────────────────────────────────────
   const handleAddBox = useCallback((boxData) => {
     const id = uid();
-    setBoxes((prev) => [
-      ...prev,
-      {
+    setBoxes((prev) => {
+      const newBox = {
         id,
         dbId: null,
         name: boxData.name,
         prefix: boxData.prefix,
         stationCount: boxData.stationCount,
-        position: { x: 60 + prev.length * 20, y: 60 + prev.length * 20 },
         orderIndex: prev.length,
-      },
-    ]);
+        position: { x: 0, y: 0 }, // placeholder; findValidPos fills it
+      };
+      // Start search from grid origin; findValidPos spirals to avoid conflicts
+      const position = findValidPos(newBox, { x: GRID, y: GRID }, prev);
+      return [...prev, { ...newBox, position }];
+    });
   }, []);
 
-  const handleBoxPositionChange = useCallback((id, pos) => {
-    setBoxes((prev) => prev.map((b) => (b.id === id ? { ...b, position: pos } : b)));
+  const handleBoxPositionChange = useCallback((id, rawPos) => {
+    setBoxes((prev) => {
+      const box = prev.find((b) => b.id === id);
+      if (!box) return prev;
+      const others = prev.filter((b) => b.id !== id);
+      const finalPos = findValidPos(box, rawPos, others);
+      return prev.map((b) => (b.id === id ? { ...b, position: finalPos } : b));
+    });
   }, []);
 
   const handleDeleteBox = useCallback((id) => {
@@ -114,8 +182,9 @@ function LayoutPreparation({
     ]);
   }, []);
 
-  const handleBypassPositionChange = useCallback((id, pos) => {
-    setBypassIcons((prev) => prev.map((b) => (b.id === id ? { ...b, position: pos } : b)));
+  const handleBypassPositionChange = useCallback((id, rawPos) => {
+    const snapped = { x: Math.max(0, snap(rawPos.x)), y: Math.max(0, snap(rawPos.y)) };
+    setBypassIcons((prev) => prev.map((b) => (b.id === id ? { ...b, position: snapped } : b)));
   }, []);
 
   const handleDeleteBypass = useCallback((id) => {
