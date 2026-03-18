@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
 import './StationBox.css';
 
@@ -12,6 +12,7 @@ function buildStationIds(prefix, count) {
 
 function StationBox({ id, name, prefix, stationCount, position, onPositionChange, onDelete }) {
   const [collapsed, setCollapsed] = useState(false);
+  const nodeRef = useRef(null);
   const stationIds = buildStationIds(prefix, stationCount);
 
   const handleDragStop = (e, data) => {
@@ -22,12 +23,13 @@ function StationBox({ id, name, prefix, stationCount, position, onPositionChange
 
   return (
     <Draggable
+      nodeRef={nodeRef}
       defaultPosition={position || { x: 0, y: 0 }}
       onStop={handleDragStop}
       handle=".station-box-header"
       bounds="parent"
     >
-      <div className={`station-box${collapsed ? ' station-box--collapsed' : ''}`}>
+      <div ref={nodeRef} className={`station-box${collapsed ? ' station-box--collapsed' : ''}`}>
         <div className="station-box-header">
           <span className="station-box-title">{name}</span>
           <div className="station-box-controls">

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
 import './BypassIcon.css';
 
 function BypassIcon({ id, position, onPositionChange, onDelete }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const nodeRef = useRef(null);
 
   const handleDragStop = (e, data) => {
     if (onPositionChange) {
@@ -18,11 +19,12 @@ function BypassIcon({ id, position, onPositionChange, onDelete }) {
 
   return (
     <Draggable
+      nodeRef={nodeRef}
       defaultPosition={position || { x: 0, y: 0 }}
       onStop={handleDragStop}
       handle=".bypass-drag-handle"
     >
-      <div className="bypass-icon-wrapper">
+      <div ref={nodeRef} className="bypass-icon-wrapper">
         <div className="bypass-drag-handle bypass-diamond" onClick={toggleExpand} title="Bypass / Connect">
           <span className="bypass-diamond-inner">B</span>
         </div>
