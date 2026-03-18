@@ -4,29 +4,20 @@ import { useXarrow } from 'react-xarrows';
 import { ChevronUp, ChevronDown, X } from 'lucide-react';
 import './StationBox.css';
 
-function buildStationIds(prefix, count) {
-  const ids = [];
-  for (let i = 1; i <= count; i++) {
-    ids.push(`${prefix}-${String(i).padStart(2, '0')}`);
-  }
-  return ids;
-}
-
 function StationBox({
   id,
   name,
-  prefix,
-  stationCount,
+  stationIds,
   position: parentPosition,
   onPositionChange,
   onDelete,
   onPortMouseDown,
+  canvasScale,
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [pos, setPos] = useState(parentPosition || { x: 0, y: 0 });
   const nodeRef = useRef(null);
   const updateXarrow = useXarrow();
-  const stationIds = buildStationIds(prefix, stationCount);
 
   useEffect(() => {
     if (parentPosition) setPos(parentPosition);
@@ -58,7 +49,7 @@ function StationBox({
       onDrag={handleDrag}
       onStop={handleStop}
       handle=".station-box-header"
-      bounds="parent"
+      scale={canvasScale || 1}
     >
       <div
         ref={nodeRef}

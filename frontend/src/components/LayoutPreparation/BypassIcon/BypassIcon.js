@@ -4,7 +4,7 @@ import { useXarrow } from 'react-xarrows';
 import { GitBranch, X, Trash2 } from 'lucide-react';
 import './BypassIcon.css';
 
-function BypassIcon({ id, position, onPositionChange, onDelete, onPortMouseDown }) {
+function BypassIcon({ id, position, onPositionChange, onDelete, onPortMouseDown, canvasScale }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const nodeRef = useRef(null);
   const updateXarrow = useXarrow();
@@ -35,6 +35,7 @@ function BypassIcon({ id, position, onPositionChange, onDelete, onPortMouseDown 
       onDrag={updateXarrow}
       onStop={handleDragStop}
       handle=".bypass-drag-handle"
+      scale={canvasScale || 1}
     >
       <div ref={nodeRef} id={id} className="bypass-icon-wrapper">
         <div className="bypass-drag-handle bypass-diamond" onClick={toggleExpand} title="Bypass / Connect">

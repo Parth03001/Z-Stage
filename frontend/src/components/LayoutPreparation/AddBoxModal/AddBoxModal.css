@@ -132,3 +132,99 @@
 .modal-btn--add:hover {
   background-color: #2a3f6f;
 }
+
+/* Mode toggle */
+.modal-mode-toggle {
+  display: flex;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.modal-mode-btn {
+  flex: 1;
+  padding: 7px 0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background-color: #f7fafc;
+  color: #718096;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.modal-mode-btn:first-child {
+  border-right: 1px solid #cbd5e0;
+}
+
+.modal-mode-btn--active {
+  background-color: #1a2744;
+  color: #ffffff;
+}
+
+/* Label hint */
+.modal-label-hint {
+  font-weight: 400;
+  color: #a0aec0;
+  font-size: 11px;
+}
+
+/* Textarea for custom IDs */
+.modal-textarea {
+  padding: 9px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 5px;
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  color: #1a202c;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  line-height: 1.6;
+}
+
+.modal-textarea:focus {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+/* ID preview chips */
+.modal-id-preview {
+  background-color: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-id-preview-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.modal-id-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.modal-id-chip {
+  font-size: 11px;
+  font-family: 'Courier New', monospace;
+  padding: 2px 6px;
+  background-color: #ebf8ff;
+  color: #2b6cb0;
+  border: 1px solid #bee3f8;
+  border-radius: 3px;
+}
+
+.modal-id-chip--more {
+  background-color: #e2e8f0;
+  color: #718096;
+  border-color: #cbd5e0;
+}

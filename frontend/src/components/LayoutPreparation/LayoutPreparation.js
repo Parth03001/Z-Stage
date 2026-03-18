@@ -24,8 +24,8 @@ const boxSize = (stationCount) => ({
 const snap = (v) => Math.round(v / GRID) * GRID;
 
 const overlaps = (a, b) => {
-  const sa = boxSize(a.stationCount);
-  const sb = boxSize(b.stationCount);
+  const sa = boxSize(a.stationCount ?? a.stationIds?.length ?? 5);
+  const sb = boxSize(b.stationCount ?? b.stationIds?.length ?? 5);
   return !(
     a.position.x + sa.w + MIN_GAP <= b.position.x ||
     b.position.x + sb.w + MIN_GAP <= a.position.x ||
@@ -66,12 +66,16 @@ const findValidPos = (box, rawPos, others) => {
 };
 
 function stateFromApi(apiLayout) {
+  const buildIds = (prefix, count) =>
+    Array.from({ length: count }, (_, i) => `${prefix}-${String(i + 1).padStart(2, '0')}`);
+
   const boxes = apiLayout.station_boxes.map((b) => ({
     id: `db-box-${b.id}`,
     dbId: b.id,
     name: b.name,
-    prefix: b.prefix,
-    stationCount: b.station_count,
+    stationIds: b.station_ids
+      ? (typeof b.station_ids === 'string' ? b.station_ids.split(',') : b.station_ids)
+      : buildIds(b.prefix, b.station_count),
     position: { x: b.position_x, y: b.position_y },
     orderIndex: b.order_index,
   }));
@@ -175,12 +179,15 @@ function LayoutPreparation({
         id,
         dbId: null,
         name: boxData.name,
-        prefix: boxData.prefix,
-        stationCount: boxData.stationCount,
+        stationIds: boxData.stationIds,
         orderIndex: prev.length,
         position: { x: 0, y: 0 },
       };
-      const position = findValidPos(newBox, { x: GRID, y: GRID }, prev);
+      const position = findValidPos(
+        { ...newBox, stationCount: boxData.stationIds.length },
+        { x: GRID, y: GRID },
+        prev,
+      );
       return [...prev, { ...newBox, position }];
     });
   }, []);
@@ -231,8 +238,9 @@ function LayoutPreparation({
       boxes: boxes.map((b) => ({
         local_id: b.id,
         name: b.name,
-        prefix: b.prefix,
-        station_count: b.stationCount,
+        prefix: b.stationIds?.[0]?.split('-')[0] ?? 'ST',
+        station_count: b.stationIds?.length ?? 0,
+        station_ids: b.stationIds?.join(','),
         position_x: b.position.x,
         position_y: b.position.y,
         order_index: b.orderIndex,
@@ -354,7 +362,7 @@ function LayoutPreparation({
           wheel={{ step: 0.08 }}
           panning={{ excluded: ['station-box-header', 'bypass-drag-handle', 'station-port', 'bypass-port'] }}
         >
-          {({ zoomIn, zoomOut, resetTransform }) => (
+          {({ zoomIn, zoomOut, resetTransform, state: transformState }) => (
             <>
               <TransformComponent
                 wrapperStyle={{ width: '100%', height: '100%' }}
@@ -383,6 +391,7 @@ function LayoutPreparation({
                         onPositionChange={handleBypassPositionChange}
                         onDelete={handleDeleteBypass}
                         onPortMouseDown={handlePortMouseDown}
+                        canvasScale={transformState.scale}
                       />
                     ))}
 
@@ -391,12 +400,12 @@ function LayoutPreparation({
                         key={box.id}
                         id={box.id}
                         name={box.name}
-                        prefix={box.prefix}
-                        stationCount={box.stationCount}
+                        stationIds={box.stationIds}
                         position={box.position}
                         onPositionChange={handleBoxPositionChange}
                         onDelete={handleDeleteBox}
                         onPortMouseDown={handlePortMouseDown}
+                        canvasScale={transformState.scale}
                       />
                     ))}
 

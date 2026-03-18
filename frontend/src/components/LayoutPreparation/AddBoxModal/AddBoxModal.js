@@ -1,27 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X } from 'lucide-react';
 import './AddBoxModal.css';
 
-const DEFAULT_FORM = {
-  name: '',
-  prefix: '',
-  stationCount: 5,
-};
+function buildAutoIds(prefix, count) {
+  const p = prefix.trim().toUpperCase();
+  return Array.from({ length: count }, (_, i) => `${p}-${String(i + 1).padStart(2, '0')}`);
+}
+
+const DEFAULT_FORM = { name: '', prefix: '', stationCount: 5 };
 
 function AddBoxModal({ onAdd, onClose }) {
   const [form, setForm] = useState(DEFAULT_FORM);
+  const [mode, setMode] = useState('auto'); // 'auto' | 'custom'
+  const [customText, setCustomText] = useState('');
   const [errors, setErrors] = useState({});
 
-  const validate = () => {
-    const errs = {};
-    if (!form.name.trim()) errs.name = 'Station name is required';
-    if (!form.prefix.trim()) errs.prefix = 'Prefix is required';
-    if (!form.stationCount || form.stationCount < 1) errs.stationCount = 'At least 1 station required';
-    if (form.stationCount > 30) errs.stationCount = 'Maximum 30 stations';
-    return errs;
+  // IDs generated from prefix+count (shown as preview in auto mode)
+  const autoIds = useMemo(() => {
+    if (!form.prefix.trim() || form.stationCount < 1) return [];
+    return buildAutoIds(form.prefix, Number(form.stationCount));
+  }, [form.prefix, form.stationCount]);
+
+  // When switching to custom mode, pre-populate with auto IDs
+  const handleModeSwitch = (newMode) => {
+    if (newMode === 'custom' && mode === 'auto') {
+      setCustomText(autoIds.join('\n'));
+    }
+    setMode(newMode);
+    setErrors({});
   };
 
-  const handleChange = (e) => {
+  const handleFormChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
@@ -30,20 +39,42 @@ function AddBoxModal({ onAdd, onClose }) {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
+  // Parse the custom textarea: split by newline or comma, trim, dedupe empties
+  const parsedCustomIds = useMemo(
+    () =>
+      customText
+        .split(/[\n,]+/)
+        .map((s) => s.trim())
+        .filter(Boolean),
+    [customText],
+  );
+
+  const validate = () => {
+    const errs = {};
+    if (!form.name.trim()) errs.name = 'Station / line name is required';
+
+    if (mode === 'auto') {
+      if (!form.prefix.trim()) errs.prefix = 'Prefix is required';
+      if (!form.stationCount || form.stationCount < 1) errs.stationCount = 'At least 1 station required';
+      if (form.stationCount > 60) errs.stationCount = 'Maximum 60 stations';
+    } else {
+      if (parsedCustomIds.length === 0) errs.customIds = 'Enter at least one station ID';
+      if (parsedCustomIds.length > 60) errs.customIds = 'Maximum 60 stations';
+    }
+    return errs;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
-    }
-    onAdd({
-      name: form.name.trim(),
-      prefix: form.prefix.trim().toUpperCase(),
-      stationCount: Number(form.stationCount),
-    });
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+
+    const stationIds = mode === 'auto' ? autoIds : parsedCustomIds;
+    onAdd({ name: form.name.trim(), stationIds });
     onClose();
   };
+
+  const previewIds = mode === 'auto' ? autoIds : parsedCustomIds;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -54,6 +85,7 @@ function AddBoxModal({ onAdd, onClose }) {
         </div>
 
         <form className="modal-form" onSubmit={handleSubmit}>
+          {/* Name */}
           <div className="modal-field">
             <label className="modal-label">Station / Line Name</label>
             <input
@@ -61,53 +93,104 @@ function AddBoxModal({ onAdd, onClose }) {
               type="text"
               name="name"
               value={form.name}
-              onChange={handleChange}
+              onChange={handleFormChange}
               placeholder="e.g. TRIM 1"
               autoFocus
             />
             {errors.name && <span className="modal-error">{errors.name}</span>}
           </div>
 
-          <div className="modal-field">
-            <label className="modal-label">Station ID Prefix</label>
-            <input
-              className={`modal-input${errors.prefix ? ' modal-input--error' : ''}`}
-              type="text"
-              name="prefix"
-              value={form.prefix}
-              onChange={handleChange}
-              placeholder="e.g. T1 (generates T1-01, T1-02...)"
-              maxLength={6}
-            />
-            {errors.prefix && <span className="modal-error">{errors.prefix}</span>}
-            {form.prefix && form.stationCount >= 1 && (
-              <span className="modal-hint">
-                Will generate: {form.prefix.toUpperCase()}-01 … {form.prefix.toUpperCase()}-{String(form.stationCount).padStart(2, '0')}
-              </span>
-            )}
+          {/* Mode toggle */}
+          <div className="modal-mode-toggle">
+            <button
+              type="button"
+              className={`modal-mode-btn${mode === 'auto' ? ' modal-mode-btn--active' : ''}`}
+              onClick={() => handleModeSwitch('auto')}
+            >
+              Auto IDs
+            </button>
+            <button
+              type="button"
+              className={`modal-mode-btn${mode === 'custom' ? ' modal-mode-btn--active' : ''}`}
+              onClick={() => handleModeSwitch('custom')}
+            >
+              Custom IDs
+            </button>
           </div>
 
-          <div className="modal-field">
-            <label className="modal-label">Number of Stations</label>
-            <input
-              className={`modal-input${errors.stationCount ? ' modal-input--error' : ''}`}
-              type="number"
-              name="stationCount"
-              value={form.stationCount}
-              onChange={handleChange}
-              min={1}
-              max={30}
-            />
-            {errors.stationCount && <span className="modal-error">{errors.stationCount}</span>}
-          </div>
+          {/* Auto mode */}
+          {mode === 'auto' && (
+            <>
+              <div className="modal-field">
+                <label className="modal-label">Station ID Prefix</label>
+                <input
+                  className={`modal-input${errors.prefix ? ' modal-input--error' : ''}`}
+                  type="text"
+                  name="prefix"
+                  value={form.prefix}
+                  onChange={handleFormChange}
+                  placeholder="e.g. T1  →  T1-01, T1-02 …"
+                  maxLength={10}
+                />
+                {errors.prefix && <span className="modal-error">{errors.prefix}</span>}
+              </div>
+
+              <div className="modal-field">
+                <label className="modal-label">Number of Stations</label>
+                <input
+                  className={`modal-input${errors.stationCount ? ' modal-input--error' : ''}`}
+                  type="number"
+                  name="stationCount"
+                  value={form.stationCount}
+                  onChange={handleFormChange}
+                  min={1}
+                  max={60}
+                />
+                {errors.stationCount && <span className="modal-error">{errors.stationCount}</span>}
+              </div>
+            </>
+          )}
+
+          {/* Custom mode */}
+          {mode === 'custom' && (
+            <div className="modal-field">
+              <label className="modal-label">
+                Station IDs
+                <span className="modal-label-hint"> — one per line or comma-separated</span>
+              </label>
+              <textarea
+                className={`modal-textarea${errors.customIds ? ' modal-input--error' : ''}`}
+                value={customText}
+                onChange={(e) => {
+                  setCustomText(e.target.value);
+                  if (errors.customIds) setErrors((p) => ({ ...p, customIds: undefined }));
+                }}
+                placeholder={"T1-01\nT1-02\nT1-03\n…  or  T1-01, T1-02, T1-03"}
+                rows={6}
+                spellCheck={false}
+              />
+              {errors.customIds && <span className="modal-error">{errors.customIds}</span>}
+            </div>
+          )}
+
+          {/* ID preview chips */}
+          {previewIds.length > 0 && (
+            <div className="modal-id-preview">
+              <span className="modal-id-preview-label">{previewIds.length} station{previewIds.length !== 1 ? 's' : ''}:</span>
+              <div className="modal-id-chips">
+                {previewIds.slice(0, 20).map((id) => (
+                  <span key={id} className="modal-id-chip">{id}</span>
+                ))}
+                {previewIds.length > 20 && (
+                  <span className="modal-id-chip modal-id-chip--more">+{previewIds.length - 20} more</span>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="modal-actions">
-            <button type="button" className="modal-btn modal-btn--cancel" onClick={onClose}>
-              Cancel
-            </button>
-            <button type="submit" className="modal-btn modal-btn--add">
-              Add Box
-            </button>
+            <button type="button" className="modal-btn modal-btn--cancel" onClick={onClose}>Cancel</button>
+            <button type="submit" className="modal-btn modal-btn--add">Add Box</button>
           </div>
         </form>
       </div>
