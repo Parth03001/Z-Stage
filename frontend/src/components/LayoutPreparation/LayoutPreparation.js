@@ -252,13 +252,8 @@ function LayoutPreparation({
   }, []);
 
   const handleBoxPositionChange = useCallback((id, rawPos) => {
-    setBoxes((prev) => {
-      const box = prev.find((b) => b.id === id);
-      if (!box) return prev;
-      const others = prev.filter((b) => b.id !== id);
-      const finalPos = findValidPos(box, rawPos, others);
-      return prev.map((b) => (b.id === id ? { ...b, position: finalPos } : b));
-    });
+    const snapped = { x: Math.max(0, snap(rawPos.x)), y: Math.max(0, snap(rawPos.y)) };
+    setBoxes((prev) => prev.map((b) => (b.id === id ? { ...b, position: snapped } : b)));
   }, []);
 
   const handleDeleteBox = useCallback((id) => {

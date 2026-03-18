@@ -1,16 +1,26 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Draggable from 'react-draggable';
 import { useXarrow } from 'react-xarrows';
 import { GitBranch, X, Trash2 } from 'lucide-react';
 import './BypassIcon.css';
 
-function BypassIcon({ id, position, onPositionChange, onDelete, onPortMouseDown, canvasScale }) {
+function BypassIcon({ id, position: parentPosition, onPositionChange, onDelete, onPortMouseDown, canvasScale }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [pos, setPos] = useState(parentPosition || { x: 0, y: 0 });
   const nodeRef = useRef(null);
   const updateXarrow = useXarrow();
 
-  const handleDragStop = (e, data) => {
+  useEffect(() => {
+    if (parentPosition) setPos(parentPosition);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parentPosition?.x, parentPosition?.y]);
+
+  const handleDrag = (e, data) => {
+    setPos({ x: data.x, y: data.y });
     updateXarrow();
+  };
+
+  const handleDragStop = (e, data) => {
     if (onPositionChange) onPositionChange(id, { x: data.x, y: data.y });
   };
 
@@ -31,8 +41,8 @@ function BypassIcon({ id, position, onPositionChange, onDelete, onPortMouseDown,
   return (
     <Draggable
       nodeRef={nodeRef}
-      defaultPosition={position || { x: 0, y: 0 }}
-      onDrag={updateXarrow}
+      position={pos}
+      onDrag={handleDrag}
       onStop={handleDragStop}
       handle=".bypass-drag-handle"
       scale={canvasScale || 1}
