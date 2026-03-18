@@ -46,6 +46,7 @@ function BypassIcon({ id, position: parentPosition, onPositionChange, onDelete, 
       onStop={handleDragStop}
       handle=".bypass-drag-handle"
       scale={canvasScale || 1}
+      grid={[40 * (canvasScale || 1), 40 * (canvasScale || 1)]}
     >
       <div ref={nodeRef} id={id} className="bypass-icon-wrapper">
         <div className="bypass-drag-handle bypass-diamond" onClick={toggleExpand} title="Bypass / Connect">

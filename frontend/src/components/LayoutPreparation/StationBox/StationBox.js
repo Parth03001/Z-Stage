@@ -57,6 +57,7 @@ function StationBox({
       onStop={handleStop}
       handle=".station-box-header"
       scale={canvasScale || 1}
+      grid={[40 * (canvasScale || 1), 40 * (canvasScale || 1)]}
     >
       <div
         ref={nodeRef}
