@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
 import { useXarrow } from 'react-xarrows';
+import { GitBranch, X, Trash2 } from 'lucide-react';
 import './BypassIcon.css';
 
 function BypassIcon({ id, position, onPositionChange, onDelete }) {
@@ -28,14 +29,14 @@ function BypassIcon({ id, position, onPositionChange, onDelete }) {
     >
       <div ref={nodeRef} id={id} className="bypass-icon-wrapper">
         <div className="bypass-drag-handle bypass-diamond" onClick={toggleExpand} title="Bypass / Connect">
-          <span className="bypass-diamond-inner">B</span>
+          <span className="bypass-diamond-inner"><GitBranch size={14} /></span>
         </div>
 
         {isExpanded && (
           <div className="bypass-accordion">
             <div className="bypass-accordion-header">
               <span>Bypass Connection</span>
-              <button className="bypass-close-btn" onClick={toggleExpand}>✕</button>
+              <button className="bypass-close-btn" onClick={toggleExpand}><X size={12} /></button>
             </div>
             <div className="bypass-accordion-body">
               <div className="bypass-connection-row">
@@ -53,6 +54,7 @@ function BypassIcon({ id, position, onPositionChange, onDelete }) {
             </div>
             {onDelete && (
               <button className="bypass-delete-btn" onClick={() => onDelete(id)}>
+                <Trash2 size={12} />
                 Remove
               </button>
             )}

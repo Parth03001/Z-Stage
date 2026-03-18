@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { X } from 'lucide-react';
 import './AddBoxModal.css';
 
 const DEFAULT_FORM = {
@@ -49,7 +50,7 @@ function AddBoxModal({ onAdd, onClose }) {
       <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2 className="modal-title">Add Station Box</h2>
-          <button className="modal-close-btn" onClick={onClose}>✕</button>
+          <button className="modal-close-btn" onClick={onClose}><X size={14} /></button>
         </div>
 
         <form className="modal-form" onSubmit={handleSubmit}>

@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import Xarrow, { Xwrapper } from 'react-xarrows';
+import { Pencil, LayoutGrid, Trash2 } from 'lucide-react';
 import StationBox from './StationBox/StationBox';
 import BypassIcon from './BypassIcon/BypassIcon';
 import AddBoxModal from './AddBoxModal/AddBoxModal';
@@ -322,7 +323,7 @@ function LayoutPreparation({
             <h2 className="layout-name" onClick={() => setEditingName(true)} title="Click to edit">
               {layoutName}
               {currentLayoutId && <span className="layout-saved-badge">Saved</span>}
-              <span className="layout-name-edit-icon">✏️</span>
+              <span className="layout-name-edit-icon"><Pencil size={13} /></span>
             </h2>
           )}
         </div>
@@ -336,6 +337,7 @@ function LayoutPreparation({
             </div>
           )}
           <button className="toolbar-btn toolbar-btn--clear" onClick={handleClearAll}>
+            <Trash2 size={14} />
             Clear All
           </button>
         </div>
@@ -358,7 +360,9 @@ function LayoutPreparation({
         <Xwrapper>
           {boxes.length === 0 && bypassIcons.length === 0 && (
             <div className="layout-canvas-empty">
-              <div className="layout-canvas-empty-icon">⬛</div>
+              <div className="layout-canvas-empty-icon">
+                <LayoutGrid size={52} strokeWidth={1} />
+              </div>
               <p>No station boxes yet.</p>
               <p>Use <strong>Add Box</strong> in the left panel to start.</p>
             </div>

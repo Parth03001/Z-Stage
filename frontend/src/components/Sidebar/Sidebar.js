@@ -1,10 +1,21 @@
 import React from 'react';
+import {
+  LayoutGrid,
+  Inbox,
+  BarChart2,
+  Plus,
+  Diamond,
+  Share2,
+  X,
+  Save,
+  FolderOpen,
+} from 'lucide-react';
 import './Sidebar.css';
 
 const NAV_ITEMS = [
-  { id: 'layout',    label: 'Layout Preparation', icon: '⬛' },
-  { id: 'input',     label: 'Input Data',          icon: '📥' },
-  { id: 'dashboard', label: 'Z-Stage Dashboard',   icon: '📊' },
+  { id: 'layout',    label: 'Layout Preparation', Icon: LayoutGrid },
+  { id: 'input',     label: 'Input Data',          Icon: Inbox },
+  { id: 'dashboard', label: 'Z-Stage Dashboard',   Icon: BarChart2 },
 ];
 
 function Sidebar({ activeSection, onSectionChange, layoutActions }) {
@@ -26,27 +37,28 @@ function Sidebar({ activeSection, onSectionChange, layoutActions }) {
       </div>
 
       <nav className="sidebar-nav">
-        {NAV_ITEMS.map((item) => (
-          <div key={item.id}>
+        {NAV_ITEMS.map(({ id, label, Icon }) => (
+          <div key={id}>
             <button
-              className={`sidebar-nav-item${activeSection === item.id ? ' sidebar-nav-item--active' : ''}`}
-              onClick={() => onSectionChange(item.id)}
+              className={`sidebar-nav-item${activeSection === id ? ' sidebar-nav-item--active' : ''}`}
+              onClick={() => onSectionChange(id)}
             >
-              <span className="sidebar-nav-icon">{item.icon}</span>
-              <span className="sidebar-nav-label">{item.label}</span>
+              <span className="sidebar-nav-icon">
+                <Icon size={16} />
+              </span>
+              <span className="sidebar-nav-label">{label}</span>
             </button>
 
-            {/* Sub-actions shown only when Layout Preparation is active */}
-            {item.id === 'layout' && activeSection === 'layout' && (
+            {id === 'layout' && activeSection === 'layout' && (
               <div className="sidebar-sub-panel">
 
                 <button className="sidebar-sub-btn sidebar-sub-btn--primary" onClick={onAddBox}>
-                  <span className="sidebar-sub-icon">＋</span>
+                  <Plus size={14} />
                   Add Box
                 </button>
 
                 <button className="sidebar-sub-btn sidebar-sub-btn--bypass" onClick={onAddBypass}>
-                  <span className="sidebar-sub-icon sidebar-sub-diamond">◆</span>
+                  <Diamond size={14} className="sidebar-diamond-icon" />
                   Add Bypass
                 </button>
 
@@ -54,7 +66,7 @@ function Sidebar({ activeSection, onSectionChange, layoutActions }) {
                   className={`sidebar-sub-btn sidebar-sub-btn--connect${connectMode ? ' sidebar-sub-btn--connect-active' : ''}`}
                   onClick={onToggleConnect}
                 >
-                  <span className="sidebar-sub-icon">⇢</span>
+                  {connectMode ? <X size={14} /> : <Share2 size={14} />}
                   {connectMode ? 'Cancel Connect' : 'Connect Boxes'}
                 </button>
 
@@ -65,13 +77,16 @@ function Sidebar({ activeSection, onSectionChange, layoutActions }) {
                   onClick={onSaveLayout}
                   disabled={isSaving}
                 >
-                  <span className="sidebar-sub-icon">💾</span>
+                  <Save size={14} />
                   {isSaving ? 'Saving…' : 'Save Layout'}
                 </button>
 
                 {savedLayouts.length > 0 && (
                   <div className="sidebar-load-section">
-                    <span className="sidebar-load-label">Load saved:</span>
+                    <span className="sidebar-load-label">
+                      <FolderOpen size={11} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                      Load saved
+                    </span>
                     <select
                       className="sidebar-load-select"
                       defaultValue=""
@@ -82,9 +97,7 @@ function Sidebar({ activeSection, onSectionChange, layoutActions }) {
                     >
                       <option value="" disabled>Select layout…</option>
                       {savedLayouts.map((l) => (
-                        <option key={l.id} value={l.id}>
-                          {l.name}
-                        </option>
+                        <option key={l.id} value={l.id}>{l.name}</option>
                       ))}
                     </select>
                   </div>

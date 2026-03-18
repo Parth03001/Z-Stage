@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Draggable from 'react-draggable';
 import { useXarrow } from 'react-xarrows';
+import { ChevronUp, ChevronDown, X } from 'lucide-react';
 import './StationBox.css';
 
 function buildStationIds(prefix, count) {
@@ -82,7 +83,7 @@ function StationBox({
                 title={collapsed ? 'Expand' : 'Collapse'}
                 onClick={(e) => { e.stopPropagation(); setCollapsed((v) => !v); }}
               >
-                {collapsed ? '▼' : '▲'}
+                {collapsed ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
               </button>
               {onDelete && (
                 <button
@@ -90,7 +91,7 @@ function StationBox({
                   title="Delete"
                   onClick={(e) => { e.stopPropagation(); onDelete(id); }}
                 >
-                  ✕
+                  <X size={12} />
                 </button>
               )}
             </div>

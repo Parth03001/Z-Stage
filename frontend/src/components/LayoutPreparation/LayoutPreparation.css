@@ -80,6 +80,9 @@
 }
 
 .toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 7px 14px;
   border-radius: 5px;
   font-size: 13px;

@@ -57,9 +57,15 @@
 }
 
 .sidebar-nav-icon {
-  font-size: 16px;
   width: 22px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar-diamond-icon {
+  color: #f6c90e;
 }
 
 .sidebar-nav-label {
@@ -92,15 +98,8 @@
   transition: background-color 0.15s, border-color 0.15s;
 }
 
-.sidebar-sub-icon {
-  font-size: 14px;
-  width: 16px;
-  text-align: center;
+.sidebar-sub-btn svg {
   flex-shrink: 0;
-}
-
-.sidebar-sub-diamond {
-  color: #f6c90e;
 }
 
 /* Primary — Add Box */
