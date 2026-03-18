@@ -1,50 +1,104 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from typing import List
 
-from database import get_db
-import models
+from database import get_connector
+from app.connectors.state_db_connector import StateDBConnector
+from app.queries import LayoutQueries, BypassIconQueries
 import schemas
 
 router = APIRouter(tags=["bypass_icons"])
 
 
-@router.get("/layouts/{layout_id}/bypass-icons", response_model=List[schemas.BypassIconOut])
-def list_bypass_icons(layout_id: int, db: Session = Depends(get_db)):
-    layout = db.query(models.Layout).filter(models.Layout.id == layout_id).first()
-    if not layout:
-        raise HTTPException(status_code=404, detail="Layout not found")
-    return layout.bypass_icons
+def _row_to_dict(row) -> dict:
+    return dict(row._mapping)
 
 
-@router.post("/layouts/{layout_id}/bypass-icons", response_model=schemas.BypassIconOut, status_code=201)
-def create_bypass_icon(layout_id: int, payload: schemas.BypassIconCreate, db: Session = Depends(get_db)):
-    layout = db.query(models.Layout).filter(models.Layout.id == layout_id).first()
-    if not layout:
+# ── Endpoints ─────────────────────────────────────────────────────────────────
+
+@router.get(
+    "/layouts/{layout_id}/bypass-icons",
+    response_model=List[schemas.BypassIconOut],
+)
+def list_bypass_icons(
+    layout_id: int,
+    connector: StateDBConnector = Depends(get_connector),
+):
+    layout_exists = connector.execute_query(
+        LayoutQueries.CHECK_EXISTS, {"layout_id": layout_id}
+    )
+    if not layout_exists:
         raise HTTPException(status_code=404, detail="Layout not found")
-    icon = models.BypassIcon(layout_id=layout_id, **payload.model_dump())
-    db.add(icon)
-    db.commit()
-    db.refresh(icon)
-    return icon
+
+    rows = connector.execute_query(
+        BypassIconQueries.LIST_BY_LAYOUT, {"layout_id": layout_id}
+    )
+    return [_row_to_dict(r) for r in rows]
+
+
+@router.post(
+    "/layouts/{layout_id}/bypass-icons",
+    response_model=schemas.BypassIconOut,
+    status_code=201,
+)
+def create_bypass_icon(
+    layout_id: int,
+    payload: schemas.BypassIconCreate,
+    connector: StateDBConnector = Depends(get_connector),
+):
+    layout_exists = connector.execute_query(
+        LayoutQueries.CHECK_EXISTS, {"layout_id": layout_id}
+    )
+    if not layout_exists:
+        raise HTTPException(status_code=404, detail="Layout not found")
+
+    rows = connector.execute_query(
+        BypassIconQueries.CREATE_ICON,
+        {
+            "layout_id": layout_id,
+            "position_x": payload.position_x,
+            "position_y": payload.position_y,
+        },
+    )
+    if not rows:
+        raise HTTPException(status_code=500, detail="Failed to create bypass icon")
+    return _row_to_dict(rows[0])
 
 
 @router.put("/bypass-icons/{icon_id}", response_model=schemas.BypassIconOut)
-def update_bypass_icon(icon_id: int, payload: schemas.BypassIconUpdate, db: Session = Depends(get_db)):
-    icon = db.query(models.BypassIcon).filter(models.BypassIcon.id == icon_id).first()
-    if not icon:
+def update_bypass_icon(
+    icon_id: int,
+    payload: schemas.BypassIconUpdate,
+    connector: StateDBConnector = Depends(get_connector),
+):
+    exists = connector.execute_query(
+        BypassIconQueries.CHECK_EXISTS, {"icon_id": icon_id}
+    )
+    if not exists:
         raise HTTPException(status_code=404, detail="Bypass icon not found")
-    for field, value in payload.model_dump(exclude_unset=True).items():
-        setattr(icon, field, value)
-    db.commit()
-    db.refresh(icon)
-    return icon
+
+    data = payload.model_dump()
+    rows = connector.execute_query(
+        BypassIconQueries.UPDATE_ICON,
+        {
+            "icon_id": icon_id,
+            "position_x": data.get("position_x"),
+            "position_y": data.get("position_y"),
+        },
+    )
+    if not rows:
+        raise HTTPException(status_code=500, detail="Failed to update bypass icon")
+    return _row_to_dict(rows[0])
 
 
 @router.delete("/bypass-icons/{icon_id}", status_code=204)
-def delete_bypass_icon(icon_id: int, db: Session = Depends(get_db)):
-    icon = db.query(models.BypassIcon).filter(models.BypassIcon.id == icon_id).first()
-    if not icon:
+def delete_bypass_icon(
+    icon_id: int,
+    connector: StateDBConnector = Depends(get_connector),
+):
+    exists = connector.execute_query(
+        BypassIconQueries.CHECK_EXISTS, {"icon_id": icon_id}
+    )
+    if not exists:
         raise HTTPException(status_code=404, detail="Bypass icon not found")
-    db.delete(icon)
-    db.commit()
+
+    connector.execute_update(BypassIconQueries.DELETE_ICON, {"icon_id": icon_id})

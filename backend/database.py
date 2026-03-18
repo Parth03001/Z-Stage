@@ -1,23 +1,23 @@
-import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
-from dotenv import load_dotenv
+"""
+FastAPI dependency that provides a StateDBConnector instance.
+The connector is created once (singleton) and reused across requests.
+"""
 
-load_dotenv()
+import logging
+from app.connectors.state_db_connector import StateDBConnector
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:password@localhost:5432/zstage"
-)
+logger = logging.getLogger(__name__)
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+_connector: StateDBConnector = None
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+def get_connector() -> StateDBConnector:
+    """
+    Return the shared StateDBConnector.
+    Initialises on first call; subsequent calls return the cached instance.
+    """
+    global _connector
+    if _connector is None:
+        logger.info("Initialising StateDBConnector …")
+        _connector = StateDBConnector()
+    return _connector
