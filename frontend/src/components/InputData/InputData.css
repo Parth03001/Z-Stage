@@ -1,0 +1,28 @@
+.input-data {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: #f7fafc;
+}
+
+.input-data-placeholder {
+  text-align: center;
+  color: #a0aec0;
+}
+
+.input-data-icon {
+  font-size: 52px;
+  margin-bottom: 16px;
+}
+
+.input-data-placeholder h2 {
+  font-size: 20px;
+  color: #4a5568;
+  margin: 0 0 8px 0;
+}
+
+.input-data-placeholder p {
+  font-size: 14px;
+  margin: 0;
+}

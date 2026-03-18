@@ -1,0 +1,28 @@
+.z-dashboard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: #f7fafc;
+}
+
+.z-dashboard-placeholder {
+  text-align: center;
+  color: #a0aec0;
+}
+
+.z-dashboard-icon {
+  font-size: 52px;
+  margin-bottom: 16px;
+}
+
+.z-dashboard-placeholder h2 {
+  font-size: 20px;
+  color: #4a5568;
+  margin: 0 0 8px 0;
+}
+
+.z-dashboard-placeholder p {
+  font-size: 14px;
+  margin: 0;
+}

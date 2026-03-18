@@ -1,0 +1,134 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-panel {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  width: 420px;
+  max-width: 95vw;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #1a2744;
+  border-radius: 8px 8px 0 0;
+}
+
+.modal-title {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: #a0aec0;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.modal-close-btn:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-form {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.modal-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.modal-input {
+  padding: 9px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 5px;
+  font-size: 14px;
+  color: #1a202c;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.modal-input:focus {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.modal-input--error {
+  border-color: #e53e3e;
+}
+
+.modal-error {
+  font-size: 11px;
+  color: #e53e3e;
+}
+
+.modal-hint {
+  font-size: 11px;
+  color: #718096;
+  font-style: italic;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.modal-btn {
+  padding: 9px 20px;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.15s;
+}
+
+.modal-btn--cancel {
+  background-color: #edf2f7;
+  color: #4a5568;
+}
+
+.modal-btn--cancel:hover {
+  background-color: #e2e8f0;
+}
+
+.modal-btn--add {
+  background-color: #1a2744;
+  color: #ffffff;
+}
+
+.modal-btn--add:hover {
+  background-color: #2a3f6f;
+}

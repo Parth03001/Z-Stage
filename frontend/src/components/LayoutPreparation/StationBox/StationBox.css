@@ -1,0 +1,114 @@
+.station-box {
+  position: absolute;
+  background-color: #f7fafc;
+  border: 2px solid #2d3748;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  user-select: none;
+  z-index: 5;
+}
+
+.station-box--collapsed {
+  min-width: 160px;
+}
+
+.station-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  background-color: #f0f4f8;
+  border-bottom: 1px solid #cbd5e0;
+  cursor: grab;
+  border-radius: 2px 2px 0 0;
+}
+
+.station-box-header:active {
+  cursor: grabbing;
+}
+
+.station-box-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a202c;
+  letter-spacing: 0.5px;
+}
+
+.station-box-controls {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.station-box-ctrl-btn {
+  background: none;
+  border: 1px solid #cbd5e0;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 10px;
+  padding: 1px 5px;
+  color: #4a5568;
+  line-height: 1.4;
+  transition: background-color 0.15s;
+}
+
+.station-box-ctrl-btn:hover {
+  background-color: #e2e8f0;
+}
+
+.station-box-ctrl-btn--delete {
+  color: #e53e3e;
+  border-color: #feb2b2;
+}
+
+.station-box-ctrl-btn--delete:hover {
+  background-color: #fff5f5;
+}
+
+/* Grid */
+.station-box-body {
+  overflow-x: auto;
+}
+
+.station-grid {
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+}
+
+.station-grid-header-row {
+  display: flex;
+  background-color: #276749;
+}
+
+.station-grid-header-cell {
+  min-width: 52px;
+  padding: 3px 4px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffffff;
+  border-right: 1px solid #1c4532;
+  white-space: nowrap;
+}
+
+.station-grid-header-cell:last-child {
+  border-right: none;
+}
+
+.station-grid-data-row {
+  display: flex;
+  border-top: 1px solid #e2e8f0;
+}
+
+.station-grid-data-cell {
+  min-width: 52px;
+  height: 28px;
+  border-right: 1px solid #e2e8f0;
+  background-color: #ffffff;
+}
+
+.station-grid-data-cell:last-child {
+  border-right: none;
+}
