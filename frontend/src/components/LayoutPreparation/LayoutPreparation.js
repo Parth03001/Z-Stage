@@ -110,6 +110,7 @@ function LayoutPreparation({
   const [editingName, setEditingName] = useState(false);
   const [currentLayoutId, setCurrentLayoutId] = useState(null);
   const [canvasScale, setCanvasScale] = useState(1);
+  const [transformState, setTransformState] = useState({ scale: 1, positionX: 0, positionY: 0 });
 
   // ── Drag-to-connect state ────────────────────────────────────────────────────
   const [dragging, setDragging] = useState(null);
@@ -360,15 +361,25 @@ function LayoutPreparation({
           <span className="layout-stat layout-stat--hint">Scroll to zoom · Drag canvas to pan</span>
         </div>
 
-        {/* Canvas */}
-        <div className="layout-canvas" ref={canvasRef}>
+        {/* Canvas — backgroundSize/Position synced with zoom+pan so grid scales with content */}
+        <div
+          className="layout-canvas"
+          ref={canvasRef}
+          style={{
+            backgroundSize: `${GRID * transformState.scale}px ${GRID * transformState.scale}px`,
+            backgroundPosition: `${transformState.positionX}px ${transformState.positionY}px`,
+          }}
+        >
           <TransformWrapper
             limitToBounds={false}
             minScale={0.15}
             maxScale={3}
             wheel={{ step: 0.08 }}
             panning={{ excluded: ['station-box-header', 'bypass-drag-handle', 'station-port', 'bypass-port'] }}
-            onTransformed={(_, state) => setCanvasScale(state.scale)}
+            onTransformed={(_, state) => {
+                setCanvasScale(state.scale);
+                setTransformState({ scale: state.scale, positionX: state.positionX, positionY: state.positionY });
+              }}
           >
             {({ zoomIn, zoomOut, resetTransform }) => (
               <>
