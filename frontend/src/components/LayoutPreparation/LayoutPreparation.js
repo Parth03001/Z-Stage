@@ -253,7 +253,15 @@ function LayoutPreparation({
 
   const handleBoxPositionChange = useCallback((id, rawPos) => {
     const snapped = { x: Math.max(0, snap(rawPos.x)), y: Math.max(0, snap(rawPos.y)) };
-    setBoxes((prev) => prev.map((b) => (b.id === id ? { ...b, position: snapped } : b)));
+    setBoxes((prev) => {
+      const updated = prev.map((b) => (b.id === id ? { ...b, position: snapped } : b));
+      // Move dragged box to end so it renders on top (highest DOM order = highest stacking)
+      const idx = updated.findIndex((b) => b.id === id);
+      if (idx < updated.length - 1) {
+        return [...updated.filter((b) => b.id !== id), updated[idx]];
+      }
+      return updated;
+    });
   }, []);
 
   const handleDeleteBox = useCallback((id) => {

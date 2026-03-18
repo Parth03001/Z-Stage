@@ -16,6 +16,7 @@ function StationBox({
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [pos, setPos] = useState(parentPosition || { x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
   const nodeRef = useRef(null);
   const updateXarrow = useXarrow();
 
@@ -24,12 +25,17 @@ function StationBox({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parentPosition?.x, parentPosition?.y]);
 
+  const handleStart = () => {
+    setIsDragging(true);
+  };
+
   const handleDrag = (e, data) => {
     setPos({ x: data.x, y: data.y });
     updateXarrow();
   };
 
   const handleStop = (e, data) => {
+    setIsDragging(false);
     if (onPositionChange) onPositionChange(id, { x: data.x, y: data.y });
   };
 
@@ -46,6 +52,7 @@ function StationBox({
     <Draggable
       nodeRef={nodeRef}
       position={pos}
+      onStart={handleStart}
       onDrag={handleDrag}
       onStop={handleStop}
       handle=".station-box-header"
@@ -55,6 +62,7 @@ function StationBox({
         ref={nodeRef}
         id={id}
         className={['station-box', collapsed ? 'station-box--collapsed' : ''].join(' ').trim()}
+        style={isDragging ? { zIndex: 1000 } : undefined}
       >
         {/* Connection ports — visible on hover */}
         <div className="station-ports">
