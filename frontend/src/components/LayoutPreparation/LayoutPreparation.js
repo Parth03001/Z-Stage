@@ -1,6 +1,7 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Xarrow, { Xwrapper } from 'react-xarrows';
-import { Pencil, LayoutGrid, Trash2 } from 'lucide-react';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import { Pencil, LayoutGrid, Trash2, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import StationBox from './StationBox/StationBox';
 import BypassIcon from './BypassIcon/BypassIcon';
 import AddBoxModal from './AddBoxModal/AddBoxModal';
@@ -11,19 +12,17 @@ let nextId = 1;
 const uid = () => `loc-${nextId++}`;
 
 // ── Grid constants ────────────────────────────────────────────────────────────
-const GRID = 40;          // canvas background cell size (px)
-const MIN_GAP = GRID;     // required clear space between any two boxes
+const GRID = 40;
+const MIN_GAP = GRID;
+const CANVAS_SIZE = 5000;
 
-// Estimate rendered box dimensions from station count
 const boxSize = (stationCount) => ({
   w: Math.max(200, stationCount * 52),
-  h: 142,   // header(30) + id-row(26) + 3 data rows(28*3) + border(2)
+  h: 142,
 });
 
-// Snap a raw pixel value to the nearest grid multiple
 const snap = (v) => Math.round(v / GRID) * GRID;
 
-// Returns true when box A and B overlap (including required gap)
 const overlaps = (a, b) => {
   const sa = boxSize(a.stationCount);
   const sb = boxSize(b.stationCount);
@@ -35,14 +34,10 @@ const overlaps = (a, b) => {
   );
 };
 
-// Find the nearest valid snapped position for `box` given `others`.
-// Starts from `rawPos`, snaps it, then spirals outward grid-cell by grid-cell
-// until a non-overlapping position is found.
 const findValidPos = (box, rawPos, others) => {
   const origin = { x: Math.max(0, snap(rawPos.x)), y: Math.max(0, snap(rawPos.y)) };
 
   for (let radius = 0; radius <= 30; radius++) {
-    // Build the perimeter of the square at this radius
     const candidates = [];
     if (radius === 0) {
       candidates.push(origin);
@@ -67,13 +62,9 @@ const findValidPos = (box, rawPos, others) => {
       if (!others.some((o) => overlaps(candidate, o))) return pos;
     }
   }
-  return origin; // fallback (shouldn't reach here)
+  return origin;
 };
 
-/**
- * Build local state from a LayoutOut response (loaded from DB).
- * All IDs are prefixed with "db-" so they never clash with local "loc-" IDs.
- */
 function stateFromApi(apiLayout) {
   const boxes = apiLayout.station_boxes.map((b) => ({
     id: `db-box-${b.id}`,
@@ -103,8 +94,6 @@ function stateFromApi(apiLayout) {
 function LayoutPreparation({
   showAddBoxModal,
   onCloseAddBoxModal,
-  connectMode,
-  onToggleConnect,
   addBypassSignal,
   onSaveLayout,
   onLoadLayout,
@@ -115,24 +104,62 @@ function LayoutPreparation({
   const [layoutName, setLayoutName] = useState('New Layout');
   const [editingName, setEditingName] = useState(false);
   const [currentLayoutId, setCurrentLayoutId] = useState(null);
-  const [selectedSource, setSelectedSource] = useState(null); // local id of first-clicked box
 
-  // ── Connect mode: cancel on Escape ─────────────────────────────────────────
+  // ── Drag-to-connect state ────────────────────────────────────────────────────
+  // dragging: { fromId, x1, y1 } — set once when drag starts; null when not dragging
+  // dragPos:  { x2, y2 }         — updated every mousemove during drag
+  const [dragging, setDragging] = useState(null);
+  const [dragPos, setDragPos] = useState({ x2: 0, y2: 0 });
+  const canvasRef = useRef(null);
+
+  // Attach window-level mousemove / mouseup only while a connection is being dragged
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape' && connectMode) {
-        setSelectedSource(null);
-        onToggleConnect && onToggleConnect();
-      }
+    if (!dragging) return;
+
+    const onMove = (e) => {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setDragPos({ x2: e.clientX - rect.left, y2: e.clientY - rect.top });
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [connectMode, onToggleConnect]);
 
-  // Reset selected source when leaving connect mode
-  useEffect(() => {
-    if (!connectMode) setSelectedSource(null);
-  }, [connectMode]);
+    const onUp = (e) => {
+      const elements = document.elementsFromPoint(e.clientX, e.clientY);
+      const target = elements.find(
+        (el) =>
+          (el.classList.contains('station-box') ||
+            el.classList.contains('bypass-icon-wrapper')) &&
+          el.id !== dragging.fromId,
+      );
+      if (target?.id) {
+        setConnections((prev) => {
+          const dup = prev.some(
+            (c) => c.fromId === dragging.fromId && c.toId === target.id,
+          );
+          if (dup) return prev;
+          return [...prev, { id: uid(), fromId: dragging.fromId, toId: target.id }];
+        });
+      }
+      setDragging(null);
+    };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragging?.fromId]);
+
+  // Called by StationBox / BypassIcon when user mousedowns on a connection port
+  const handlePortMouseDown = useCallback((fromId, clientX, clientY) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    setDragging({ fromId, x1: x, y1: y });
+    setDragPos({ x2: x, y2: y });
+  }, []);
 
   // Add bypass icon when parent signals it
   useEffect(() => {
@@ -151,9 +178,8 @@ function LayoutPreparation({
         prefix: boxData.prefix,
         stationCount: boxData.stationCount,
         orderIndex: prev.length,
-        position: { x: 0, y: 0 }, // placeholder; findValidPos fills it
+        position: { x: 0, y: 0 },
       };
-      // Start search from grid origin; findValidPos spirals to avoid conflicts
       const position = findValidPos(newBox, { x: GRID, y: GRID }, prev);
       return [...prev, { ...newBox, position }];
     });
@@ -190,35 +216,10 @@ function LayoutPreparation({
 
   const handleDeleteBypass = useCallback((id) => {
     setBypassIcons((prev) => prev.filter((b) => b.id !== id));
+    setConnections((prev) => prev.filter((c) => c.fromId !== id && c.toId !== id));
   }, []);
 
-  // ── Connect boxes ───────────────────────────────────────────────────────────
-  const handleBoxClick = useCallback((boxId) => {
-    if (!connectMode) return;
-
-    if (!selectedSource) {
-      setSelectedSource(boxId);
-    } else {
-      if (selectedSource === boxId) {
-        // clicked same box — cancel
-        setSelectedSource(null);
-        return;
-      }
-      // Check duplicate
-      const alreadyExists = connections.some(
-        (c) => c.fromId === selectedSource && c.toId === boxId
-      );
-      if (!alreadyExists) {
-        setConnections((prev) => [
-          ...prev,
-          { id: uid(), fromId: selectedSource, toId: boxId },
-        ]);
-      }
-      setSelectedSource(null);
-      onToggleConnect && onToggleConnect(); // exit connect mode after connecting
-    }
-  }, [connectMode, selectedSource, connections, onToggleConnect]);
-
+  // ── Delete connection ────────────────────────────────────────────────────────
   const handleDeleteConnection = useCallback((connId) => {
     setConnections((prev) => prev.filter((c) => c.id !== connId));
   }, []);
@@ -256,7 +257,6 @@ function LayoutPreparation({
       }
       const saved = response.data;
       setCurrentLayoutId(saved.id);
-      // Rebuild local state from DB response so all IDs are db-prefixed
       const rebuilt = stateFromApi(saved);
       setBoxes(rebuilt.boxes);
       setBypassIcons(rebuilt.bypassIcons);
@@ -296,7 +296,7 @@ function LayoutPreparation({
     }
   };
 
-  // Expose handleSave and handleLoad to parent via callbacks
+  // Expose handleSave and handleLoad to parent
   useEffect(() => {
     if (onSaveLayout) onSaveLayout(handleSave);
   }, [handleSave, onSaveLayout]);
@@ -307,7 +307,7 @@ function LayoutPreparation({
 
   return (
     <div className="layout-prep">
-      {/* Toolbar — name + clear only */}
+      {/* Toolbar */}
       <div className="layout-toolbar">
         <div className="layout-toolbar-left">
           {editingName ? (
@@ -329,13 +329,7 @@ function LayoutPreparation({
         </div>
 
         <div className="layout-toolbar-right">
-          {connectMode && (
-            <div className="layout-connect-hint">
-              {selectedSource
-                ? '→ Now click the target box'
-                : '→ Click a source box'}
-            </div>
-          )}
+          <span className="layout-connect-hint">Drag from a port dot to connect</span>
           <button className="toolbar-btn toolbar-btn--clear" onClick={handleClearAll}>
             <Trash2 size={14} />
             Clear All
@@ -348,69 +342,120 @@ function LayoutPreparation({
         <span className="layout-stat"><strong>{boxes.length}</strong> Boxes</span>
         <span className="layout-stat"><strong>{bypassIcons.length}</strong> Bypass Icons</span>
         <span className="layout-stat"><strong>{connections.length}</strong> Connections</span>
-        {connectMode && (
-          <span className="layout-stat layout-stat--connect-mode">
-            Connect mode — press Esc to cancel
-          </span>
-        )}
+        <span className="layout-stat layout-stat--hint">Scroll to zoom · Drag canvas to pan</span>
       </div>
 
       {/* Canvas */}
-      <div className={`layout-canvas${connectMode ? ' layout-canvas--connect-mode' : ''}`}>
-        <Xwrapper>
-          {boxes.length === 0 && bypassIcons.length === 0 && (
-            <div className="layout-canvas-empty">
-              <div className="layout-canvas-empty-icon">
-                <LayoutGrid size={52} strokeWidth={1} />
+      <div className="layout-canvas" ref={canvasRef}>
+        <TransformWrapper
+          limitToBounds={false}
+          minScale={0.15}
+          maxScale={3}
+          wheel={{ step: 0.08 }}
+          panning={{ excluded: ['station-box-header', 'bypass-drag-handle', 'station-port', 'bypass-port'] }}
+        >
+          {({ zoomIn, zoomOut, resetTransform }) => (
+            <>
+              <TransformComponent
+                wrapperStyle={{ width: '100%', height: '100%' }}
+                contentStyle={{ width: `${CANVAS_SIZE}px`, height: `${CANVAS_SIZE}px` }}
+              >
+                <div
+                  className="layout-virtual-canvas"
+                  style={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
+                >
+                  <Xwrapper>
+                    {boxes.length === 0 && bypassIcons.length === 0 && (
+                      <div className="layout-canvas-empty">
+                        <div className="layout-canvas-empty-icon">
+                          <LayoutGrid size={52} strokeWidth={1} />
+                        </div>
+                        <p>No station boxes yet.</p>
+                        <p>Use <strong>Add Box</strong> in the left panel to start.</p>
+                      </div>
+                    )}
+
+                    {bypassIcons.map((icon) => (
+                      <BypassIcon
+                        key={icon.id}
+                        id={icon.id}
+                        position={icon.position}
+                        onPositionChange={handleBypassPositionChange}
+                        onDelete={handleDeleteBypass}
+                        onPortMouseDown={handlePortMouseDown}
+                      />
+                    ))}
+
+                    {boxes.map((box) => (
+                      <StationBox
+                        key={box.id}
+                        id={box.id}
+                        name={box.name}
+                        prefix={box.prefix}
+                        stationCount={box.stationCount}
+                        position={box.position}
+                        onPositionChange={handleBoxPositionChange}
+                        onDelete={handleDeleteBox}
+                        onPortMouseDown={handlePortMouseDown}
+                      />
+                    ))}
+
+                    {connections.map((conn) => (
+                      <Xarrow
+                        key={conn.id}
+                        start={conn.fromId}
+                        end={conn.toId}
+                        color="#1a2744"
+                        strokeWidth={2}
+                        path="smooth"
+                        headSize={6}
+                        passProps={{
+                          onClick: () => handleDeleteConnection(conn.id),
+                          style: { cursor: 'pointer' },
+                          title: 'Click to remove connection',
+                        }}
+                      />
+                    ))}
+                  </Xwrapper>
+                </div>
+              </TransformComponent>
+
+              {/* Zoom controls */}
+              <div className="canvas-zoom-controls">
+                <button className="canvas-zoom-btn" onClick={() => zoomIn()} title="Zoom in">
+                  <ZoomIn size={14} />
+                </button>
+                <button className="canvas-zoom-btn" onClick={() => zoomOut()} title="Zoom out">
+                  <ZoomOut size={14} />
+                </button>
+                <button className="canvas-zoom-btn" onClick={() => resetTransform()} title="Reset view">
+                  <Maximize2 size={14} />
+                </button>
               </div>
-              <p>No station boxes yet.</p>
-              <p>Use <strong>Add Box</strong> in the left panel to start.</p>
-            </div>
+            </>
           )}
+        </TransformWrapper>
 
-          {bypassIcons.map((icon) => (
-            <BypassIcon
-              key={icon.id}
-              id={icon.id}
-              position={icon.position}
-              onPositionChange={handleBypassPositionChange}
-              onDelete={handleDeleteBypass}
-            />
-          ))}
-
-          {boxes.map((box) => (
-            <StationBox
-              key={box.id}
-              id={box.id}
-              name={box.name}
-              prefix={box.prefix}
-              stationCount={box.stationCount}
-              position={box.position}
-              onPositionChange={handleBoxPositionChange}
-              onDelete={handleDeleteBox}
-              connectMode={connectMode}
-              isSelected={selectedSource === box.id}
-              onBoxClick={handleBoxClick}
-            />
-          ))}
-
-          {connections.map((conn) => (
-            <Xarrow
-              key={conn.id}
-              start={conn.fromId}
-              end={conn.toId}
-              color="#1a2744"
+        {/* Drag-to-connect temporary line (screen-space overlay, outside transform) */}
+        {dragging && (
+          <svg className="layout-drag-svg">
+            <defs>
+              <marker id="drag-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill="#3182ce" />
+              </marker>
+            </defs>
+            <line
+              x1={dragging.x1}
+              y1={dragging.y1}
+              x2={dragPos.x2}
+              y2={dragPos.y2}
+              stroke="#3182ce"
               strokeWidth={2}
-              path="smooth"
-              headSize={6}
-              passProps={{
-                onClick: () => handleDeleteConnection(conn.id),
-                style: { cursor: 'pointer' },
-                title: 'Click to remove connection',
-              }}
+              strokeDasharray="6 3"
+              markerEnd="url(#drag-arrow)"
             />
-          ))}
-        </Xwrapper>
+          </svg>
+        )}
       </div>
 
       {showAddBoxModal && (

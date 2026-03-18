@@ -124,23 +124,6 @@
   background-color: rgba(246, 201, 14, 0.2);
 }
 
-/* Connect */
-.sidebar-sub-btn--connect {
-  background-color: rgba(72, 187, 120, 0.1);
-  color: #9ae6b4;
-  border-color: rgba(72, 187, 120, 0.2);
-}
-
-.sidebar-sub-btn--connect:hover {
-  background-color: rgba(72, 187, 120, 0.18);
-}
-
-.sidebar-sub-btn--connect-active {
-  background-color: rgba(72, 187, 120, 0.25);
-  color: #68d391;
-  border-color: #48bb78;
-}
-
 /* Save */
 .sidebar-sub-btn--save {
   background-color: rgba(66, 153, 225, 0.15);

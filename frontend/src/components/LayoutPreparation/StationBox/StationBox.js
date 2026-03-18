@@ -17,22 +17,17 @@ function StationBox({
   name,
   prefix,
   stationCount,
-  position: parentPosition,   // controlled by parent (after snap)
+  position: parentPosition,
   onPositionChange,
   onDelete,
-  connectMode,
-  isSelected,
-  onBoxClick,
+  onPortMouseDown,
 }) {
   const [collapsed, setCollapsed] = useState(false);
-  // Local position drives Draggable (smooth during drag).
-  // Syncs back to parentPosition after parent snaps/validates on stop.
   const [pos, setPos] = useState(parentPosition || { x: 0, y: 0 });
   const nodeRef = useRef(null);
   const updateXarrow = useXarrow();
   const stationIds = buildStationIds(prefix, stationCount);
 
-  // When parent corrects the position (snap / gap enforcement), sync it down.
   useEffect(() => {
     if (parentPosition) setPos(parentPosition);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -44,13 +39,16 @@ function StationBox({
   };
 
   const handleStop = (e, data) => {
-    // Parent computes the snapped + gap-enforced position and pushes it back
-    // via parentPosition → triggers the useEffect above.
     if (onPositionChange) onPositionChange(id, { x: data.x, y: data.y });
   };
 
-  const handleClick = () => {
-    if (connectMode && onBoxClick) onBoxClick(id);
+  const handlePortDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    if (onPortMouseDown) onPortMouseDown(id, cx, cy);
   };
 
   return (
@@ -61,41 +59,40 @@ function StationBox({
       onStop={handleStop}
       handle=".station-box-header"
       bounds="parent"
-      disabled={connectMode}
     >
       <div
         ref={nodeRef}
         id={id}
-        className={[
-          'station-box',
-          collapsed ? 'station-box--collapsed' : '',
-          connectMode ? 'station-box--connect-mode' : '',
-          isSelected ? 'station-box--selected' : '',
-        ].join(' ').trim()}
-        onClick={handleClick}
+        className={['station-box', collapsed ? 'station-box--collapsed' : ''].join(' ').trim()}
       >
+        {/* Connection ports — visible on hover */}
+        <div className="station-ports">
+          <button className="station-port station-port--top"    onMouseDown={handlePortDown} title="Drag to connect" />
+          <button className="station-port station-port--right"  onMouseDown={handlePortDown} title="Drag to connect" />
+          <button className="station-port station-port--bottom" onMouseDown={handlePortDown} title="Drag to connect" />
+          <button className="station-port station-port--left"   onMouseDown={handlePortDown} title="Drag to connect" />
+        </div>
+
         <div className="station-box-header">
           <span className="station-box-title">{name}</span>
-          {!connectMode && (
-            <div className="station-box-controls">
+          <div className="station-box-controls">
+            <button
+              className="station-box-ctrl-btn"
+              title={collapsed ? 'Expand' : 'Collapse'}
+              onClick={(e) => { e.stopPropagation(); setCollapsed((v) => !v); }}
+            >
+              {collapsed ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
+            </button>
+            {onDelete && (
               <button
-                className="station-box-ctrl-btn"
-                title={collapsed ? 'Expand' : 'Collapse'}
-                onClick={(e) => { e.stopPropagation(); setCollapsed((v) => !v); }}
+                className="station-box-ctrl-btn station-box-ctrl-btn--delete"
+                title="Delete"
+                onClick={(e) => { e.stopPropagation(); onDelete(id); }}
               >
-                {collapsed ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
+                <X size={12} />
               </button>
-              {onDelete && (
-                <button
-                  className="station-box-ctrl-btn station-box-ctrl-btn--delete"
-                  title="Delete"
-                  onClick={(e) => { e.stopPropagation(); onDelete(id); }}
-                >
-                  <X size={12} />
-                </button>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {!collapsed && (

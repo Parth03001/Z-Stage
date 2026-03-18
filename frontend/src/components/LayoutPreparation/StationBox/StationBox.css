@@ -13,24 +13,6 @@
   min-width: 160px;
 }
 
-/* Connect mode — clickable, no drag */
-.station-box--connect-mode {
-  cursor: pointer;
-  border-color: #48bb78;
-  box-shadow: 0 0 0 2px rgba(72, 187, 120, 0.3), 0 2px 10px rgba(0, 0, 0, 0.15);
-}
-
-.station-box--connect-mode:hover {
-  border-color: #38a169;
-  box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.4), 0 2px 10px rgba(0, 0, 0, 0.15);
-}
-
-/* Selected as connection source */
-.station-box--selected {
-  border-color: #3182ce !important;
-  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.5), 0 2px 10px rgba(0, 0, 0, 0.15) !important;
-}
-
 .station-box-header {
   display: flex;
   justify-content: space-between;
@@ -65,9 +47,12 @@
   border-radius: 3px;
   cursor: pointer;
   font-size: 10px;
-  padding: 1px 5px;
+  padding: 2px 5px;
   color: #4a5568;
-  line-height: 1.4;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: background-color 0.15s;
 }
 
@@ -130,3 +115,48 @@
 .station-grid-data-cell:last-child {
   border-right: none;
 }
+
+/* ── Connection ports ─────────────────────────────────────────────────────── */
+.station-ports {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 20;
+}
+
+.station-box:hover .station-ports {
+  opacity: 1;
+}
+
+.station-port {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #3182ce;
+  border: 2px solid #fff;
+  cursor: crosshair;
+  pointer-events: all;
+  padding: 0;
+  box-shadow: 0 0 0 1px #3182ce;
+  transition: transform 0.1s, background-color 0.1s;
+}
+
+.station-port:hover {
+  background: #2b6cb0;
+  transform: scale(1.4);
+}
+
+.station-port--top    { top: -6px;    left: 50%;   transform: translateX(-50%); }
+.station-port--top:hover { transform: translateX(-50%) scale(1.4); }
+
+.station-port--right  { right: -6px;  top: 50%;    transform: translateY(-50%); }
+.station-port--right:hover { transform: translateY(-50%) scale(1.4); }
+
+.station-port--bottom { bottom: -6px; left: 50%;   transform: translateX(-50%); }
+.station-port--bottom:hover { transform: translateX(-50%) scale(1.4); }
+
+.station-port--left   { left: -6px;   top: 50%;    transform: translateY(-50%); }
+.station-port--left:hover { transform: translateY(-50%) scale(1.4); }

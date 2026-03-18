@@ -4,7 +4,7 @@ import { useXarrow } from 'react-xarrows';
 import { GitBranch, X, Trash2 } from 'lucide-react';
 import './BypassIcon.css';
 
-function BypassIcon({ id, position, onPositionChange, onDelete }) {
+function BypassIcon({ id, position, onPositionChange, onDelete, onPortMouseDown }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const nodeRef = useRef(null);
   const updateXarrow = useXarrow();
@@ -19,6 +19,15 @@ function BypassIcon({ id, position, onPositionChange, onDelete }) {
     setIsExpanded((prev) => !prev);
   };
 
+  const handlePortDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    if (onPortMouseDown) onPortMouseDown(id, cx, cy);
+  };
+
   return (
     <Draggable
       nodeRef={nodeRef}
@@ -31,6 +40,12 @@ function BypassIcon({ id, position, onPositionChange, onDelete }) {
         <div className="bypass-drag-handle bypass-diamond" onClick={toggleExpand} title="Bypass / Connect">
           <span className="bypass-diamond-inner"><GitBranch size={14} /></span>
         </div>
+
+        {/* Connection ports — visible on hover */}
+        <button className="bypass-port bypass-port--right" onMouseDown={handlePortDown} title="Drag to connect" />
+        <button className="bypass-port bypass-port--left"  onMouseDown={handlePortDown} title="Drag to connect" />
+        <button className="bypass-port bypass-port--top"   onMouseDown={handlePortDown} title="Drag to connect" />
+        <button className="bypass-port bypass-port--bottom" onMouseDown={handlePortDown} title="Drag to connect" />
 
         {isExpanded && (
           <div className="bypass-accordion">

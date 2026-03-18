@@ -5,8 +5,6 @@ import {
   BarChart2,
   Plus,
   Diamond,
-  Share2,
-  X,
   Save,
   FolderOpen,
 } from 'lucide-react';
@@ -22,8 +20,6 @@ function Sidebar({ activeSection, onSectionChange, layoutActions }) {
   const {
     onAddBox,
     onAddBypass,
-    connectMode,
-    onToggleConnect,
     onSaveLayout,
     onLoadLayout,
     savedLayouts = [],
@@ -60,14 +56,6 @@ function Sidebar({ activeSection, onSectionChange, layoutActions }) {
                 <button className="sidebar-sub-btn sidebar-sub-btn--bypass" onClick={onAddBypass}>
                   <Diamond size={14} className="sidebar-diamond-icon" />
                   Add Bypass
-                </button>
-
-                <button
-                  className={`sidebar-sub-btn sidebar-sub-btn--connect${connectMode ? ' sidebar-sub-btn--connect-active' : ''}`}
-                  onClick={onToggleConnect}
-                >
-                  {connectMode ? <X size={14} /> : <Share2 size={14} />}
-                  {connectMode ? 'Cancel Connect' : 'Connect Boxes'}
                 </button>
 
                 <div className="sidebar-sub-divider" />
