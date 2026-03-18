@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Xarrow, { Xwrapper } from 'react-xarrows';
-import { TransformWrapper, TransformComponent, useTransformContext } from 'react-zoom-pan-pinch';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { Pencil, LayoutGrid, Trash2, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import StationBox from './StationBox/StationBox';
 import BypassIcon from './BypassIcon/BypassIcon';
@@ -95,16 +95,15 @@ function stateFromApi(apiLayout) {
   return { boxes, bypassIcons, connections };
 }
 
-// Inner component — must live inside TransformWrapper to call useTransformContext
 function CanvasItems({
   boxes, bypassIcons, connections,
+  canvasScale,
   onPortMouseDown,
   onBoxPositionChange, onDeleteBox,
   onBypassPositionChange, onDeleteBypass,
   onDeleteConnection,
 }) {
-  const { transformState } = useTransformContext();
-  const scale = transformState?.scale || 1;
+  const scale = canvasScale || 1;
 
   return (
     <Xwrapper>
@@ -167,6 +166,7 @@ function LayoutPreparation({
   const [layoutName, setLayoutName] = useState('New Layout');
   const [editingName, setEditingName] = useState(false);
   const [currentLayoutId, setCurrentLayoutId] = useState(null);
+  const [canvasScale, setCanvasScale] = useState(1);
 
   // ── Drag-to-connect state ────────────────────────────────────────────────────
   // dragging: { fromId, x1, y1 } — set once when drag starts; null when not dragging
@@ -420,6 +420,7 @@ function LayoutPreparation({
           maxScale={3}
           wheel={{ step: 0.08 }}
           panning={{ excluded: ['station-box-header', 'bypass-drag-handle', 'station-port', 'bypass-port'] }}
+          onTransformed={(_, state) => setCanvasScale(state.scale)}
         >
           {({ zoomIn, zoomOut, resetTransform }) => (
             <>
@@ -441,11 +442,11 @@ function LayoutPreparation({
                     </div>
                   )}
 
-                  {/* CanvasItems reads scale via useTransformContext */}
                   <CanvasItems
                     boxes={boxes}
                     bypassIcons={bypassIcons}
                     connections={connections}
+                    canvasScale={canvasScale}
                     onPortMouseDown={handlePortMouseDown}
                     onBoxPositionChange={handleBoxPositionChange}
                     onDeleteBox={handleDeleteBox}
