@@ -16,9 +16,10 @@ const GRID = 40;
 const MIN_GAP = GRID;
 const CANVAS_SIZE = 5000;
 
+// Box dimensions are multiples of GRID so edges align to grid lines
 const boxSize = (stationCount) => ({
-  w: Math.max(200, stationCount * 52),
-  h: 142,
+  w: Math.max(5, stationCount) * GRID,  // 40px per station column, min 5 cols = 200px
+  h: 4 * GRID,                          // 160px = 4 grid rows
 });
 
 const snap = (v) => Math.round(v / GRID) * GRID;
@@ -95,64 +96,6 @@ function stateFromApi(apiLayout) {
   return { boxes, bypassIcons, connections };
 }
 
-function CanvasItems({
-  boxes, bypassIcons, connections,
-  canvasScale,
-  onPortMouseDown,
-  onBoxPositionChange, onDeleteBox,
-  onBypassPositionChange, onDeleteBypass,
-  onDeleteConnection,
-}) {
-  const scale = canvasScale || 1;
-
-  return (
-    <Xwrapper>
-      {bypassIcons.map((icon) => (
-        <BypassIcon
-          key={icon.id}
-          id={icon.id}
-          position={icon.position}
-          onPositionChange={onBypassPositionChange}
-          onDelete={onDeleteBypass}
-          onPortMouseDown={onPortMouseDown}
-          canvasScale={scale}
-        />
-      ))}
-
-      {boxes.map((box) => (
-        <StationBox
-          key={box.id}
-          id={box.id}
-          name={box.name}
-          stationIds={box.stationIds}
-          position={box.position}
-          onPositionChange={onBoxPositionChange}
-          onDelete={onDeleteBox}
-          onPortMouseDown={onPortMouseDown}
-          canvasScale={scale}
-        />
-      ))}
-
-      {connections.map((conn) => (
-        <Xarrow
-          key={conn.id}
-          start={conn.fromId}
-          end={conn.toId}
-          color="#1a2744"
-          strokeWidth={2}
-          path="smooth"
-          headSize={6}
-          passProps={{
-            onClick: () => onDeleteConnection(conn.id),
-            style: { cursor: 'pointer' },
-            title: 'Click to remove connection',
-          }}
-        />
-      ))}
-    </Xwrapper>
-  );
-}
-
 function LayoutPreparation({
   showAddBoxModal,
   onCloseAddBoxModal,
@@ -169,8 +112,6 @@ function LayoutPreparation({
   const [canvasScale, setCanvasScale] = useState(1);
 
   // ── Drag-to-connect state ────────────────────────────────────────────────────
-  // dragging: { fromId, x1, y1 } — set once when drag starts; null when not dragging
-  // dragPos:  { x2, y2 }         — updated every mousemove during drag
   const [dragging, setDragging] = useState(null);
   const [dragPos, setDragPos] = useState({ x2: 0, y2: 0 });
   const canvasRef = useRef(null);
@@ -376,132 +317,172 @@ function LayoutPreparation({
   }, [handleLoad, onLoadLayout]);
 
   return (
-    <div className="layout-prep">
-      {/* Toolbar */}
-      <div className="layout-toolbar">
-        <div className="layout-toolbar-left">
-          {editingName ? (
-            <input
-              className="layout-name-input"
-              value={layoutName}
-              onChange={(e) => setLayoutName(e.target.value)}
-              onBlur={() => setEditingName(false)}
-              onKeyDown={(e) => e.key === 'Enter' && setEditingName(false)}
-              autoFocus
-            />
-          ) : (
-            <h2 className="layout-name" onClick={() => setEditingName(true)} title="Click to edit">
-              {layoutName}
-              {currentLayoutId && <span className="layout-saved-badge">Saved</span>}
-              <span className="layout-name-edit-icon"><Pencil size={13} /></span>
-            </h2>
-          )}
+    // Xwrapper wraps the whole component so Xarrow SVGs render in screen space
+    // (outside TransformComponent) — this is required for correct arrow positioning
+    // at any zoom/pan level, since Xarrow uses getBoundingClientRect() for coordinates.
+    <Xwrapper>
+      <div className="layout-prep">
+        {/* Toolbar */}
+        <div className="layout-toolbar">
+          <div className="layout-toolbar-left">
+            {editingName ? (
+              <input
+                className="layout-name-input"
+                value={layoutName}
+                onChange={(e) => setLayoutName(e.target.value)}
+                onBlur={() => setEditingName(false)}
+                onKeyDown={(e) => e.key === 'Enter' && setEditingName(false)}
+                autoFocus
+              />
+            ) : (
+              <h2 className="layout-name" onClick={() => setEditingName(true)} title="Click to edit">
+                {layoutName}
+                {currentLayoutId && <span className="layout-saved-badge">Saved</span>}
+                <span className="layout-name-edit-icon"><Pencil size={13} /></span>
+              </h2>
+            )}
+          </div>
+
+          <div className="layout-toolbar-right">
+            <span className="layout-connect-hint">Drag from a port dot to connect</span>
+            <button className="toolbar-btn toolbar-btn--clear" onClick={handleClearAll}>
+              <Trash2 size={14} />
+              Clear All
+            </button>
+          </div>
         </div>
 
-        <div className="layout-toolbar-right">
-          <span className="layout-connect-hint">Drag from a port dot to connect</span>
-          <button className="toolbar-btn toolbar-btn--clear" onClick={handleClearAll}>
-            <Trash2 size={14} />
-            Clear All
-          </button>
+        {/* Stats bar */}
+        <div className="layout-stats">
+          <span className="layout-stat"><strong>{boxes.length}</strong> Boxes</span>
+          <span className="layout-stat"><strong>{bypassIcons.length}</strong> Bypass Icons</span>
+          <span className="layout-stat"><strong>{connections.length}</strong> Connections</span>
+          <span className="layout-stat layout-stat--hint">Scroll to zoom · Drag canvas to pan</span>
         </div>
-      </div>
 
-      {/* Stats bar */}
-      <div className="layout-stats">
-        <span className="layout-stat"><strong>{boxes.length}</strong> Boxes</span>
-        <span className="layout-stat"><strong>{bypassIcons.length}</strong> Bypass Icons</span>
-        <span className="layout-stat"><strong>{connections.length}</strong> Connections</span>
-        <span className="layout-stat layout-stat--hint">Scroll to zoom · Drag canvas to pan</span>
-      </div>
-
-      {/* Canvas */}
-      <div className="layout-canvas" ref={canvasRef}>
-        <TransformWrapper
-          limitToBounds={false}
-          minScale={0.15}
-          maxScale={3}
-          wheel={{ step: 0.08 }}
-          panning={{ excluded: ['station-box-header', 'bypass-drag-handle', 'station-port', 'bypass-port'] }}
-          onTransformed={(_, state) => setCanvasScale(state.scale)}
-        >
-          {({ zoomIn, zoomOut, resetTransform }) => (
-            <>
-              <TransformComponent
-                wrapperStyle={{ width: '100%', height: '100%' }}
-                contentStyle={{ width: `${CANVAS_SIZE}px`, height: `${CANVAS_SIZE}px` }}
-              >
-                <div
-                  className="layout-virtual-canvas"
-                  style={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
+        {/* Canvas */}
+        <div className="layout-canvas" ref={canvasRef}>
+          <TransformWrapper
+            limitToBounds={false}
+            minScale={0.15}
+            maxScale={3}
+            wheel={{ step: 0.08 }}
+            panning={{ excluded: ['station-box-header', 'bypass-drag-handle', 'station-port', 'bypass-port'] }}
+            onTransformed={(_, state) => setCanvasScale(state.scale)}
+          >
+            {({ zoomIn, zoomOut, resetTransform }) => (
+              <>
+                <TransformComponent
+                  wrapperStyle={{ width: '100%', height: '100%' }}
+                  contentStyle={{ width: `${CANVAS_SIZE}px`, height: `${CANVAS_SIZE}px` }}
                 >
-                  {boxes.length === 0 && bypassIcons.length === 0 && (
-                    <div className="layout-canvas-empty">
-                      <div className="layout-canvas-empty-icon">
-                        <LayoutGrid size={52} strokeWidth={1} />
+                  <div
+                    className="layout-virtual-canvas"
+                    style={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
+                  >
+                    {boxes.length === 0 && bypassIcons.length === 0 && (
+                      <div className="layout-canvas-empty">
+                        <div className="layout-canvas-empty-icon">
+                          <LayoutGrid size={52} strokeWidth={1} />
+                        </div>
+                        <p>No station boxes yet.</p>
+                        <p>Use <strong>Add Box</strong> in the left panel to start.</p>
                       </div>
-                      <p>No station boxes yet.</p>
-                      <p>Use <strong>Add Box</strong> in the left panel to start.</p>
-                    </div>
-                  )}
+                    )}
 
-                  <CanvasItems
-                    boxes={boxes}
-                    bypassIcons={bypassIcons}
-                    connections={connections}
-                    canvasScale={canvasScale}
-                    onPortMouseDown={handlePortMouseDown}
-                    onBoxPositionChange={handleBoxPositionChange}
-                    onDeleteBox={handleDeleteBox}
-                    onBypassPositionChange={handleBypassPositionChange}
-                    onDeleteBypass={handleDeleteBypass}
-                    onDeleteConnection={handleDeleteConnection}
-                  />
+                    {bypassIcons.map((icon) => (
+                      <BypassIcon
+                        key={icon.id}
+                        id={icon.id}
+                        position={icon.position}
+                        onPositionChange={handleBypassPositionChange}
+                        onDelete={handleDeleteBypass}
+                        onPortMouseDown={handlePortMouseDown}
+                        canvasScale={canvasScale}
+                      />
+                    ))}
+
+                    {boxes.map((box) => (
+                      <StationBox
+                        key={box.id}
+                        id={box.id}
+                        name={box.name}
+                        stationIds={box.stationIds}
+                        position={box.position}
+                        onPositionChange={handleBoxPositionChange}
+                        onDelete={handleDeleteBox}
+                        onPortMouseDown={handlePortMouseDown}
+                        canvasScale={canvasScale}
+                      />
+                    ))}
+                  </div>
+                </TransformComponent>
+
+                {/* Zoom controls */}
+                <div className="canvas-zoom-controls">
+                  <button className="canvas-zoom-btn" onClick={() => zoomIn()} title="Zoom in">
+                    <ZoomIn size={14} />
+                  </button>
+                  <button className="canvas-zoom-btn" onClick={() => zoomOut()} title="Zoom out">
+                    <ZoomOut size={14} />
+                  </button>
+                  <button className="canvas-zoom-btn" onClick={() => resetTransform()} title="Reset view">
+                    <Maximize2 size={14} />
+                  </button>
                 </div>
-              </TransformComponent>
+              </>
+            )}
+          </TransformWrapper>
 
-              {/* Zoom controls */}
-              <div className="canvas-zoom-controls">
-                <button className="canvas-zoom-btn" onClick={() => zoomIn()} title="Zoom in">
-                  <ZoomIn size={14} />
-                </button>
-                <button className="canvas-zoom-btn" onClick={() => zoomOut()} title="Zoom out">
-                  <ZoomOut size={14} />
-                </button>
-                <button className="canvas-zoom-btn" onClick={() => resetTransform()} title="Reset view">
-                  <Maximize2 size={14} />
-                </button>
-              </div>
-            </>
+          {/* Drag-to-connect temporary line (screen-space overlay, outside transform) */}
+          {dragging && (
+            <svg className="layout-drag-svg">
+              <defs>
+                <marker id="drag-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="#3182ce" />
+                </marker>
+              </defs>
+              <line
+                x1={dragging.x1}
+                y1={dragging.y1}
+                x2={dragPos.x2}
+                y2={dragPos.y2}
+                stroke="#3182ce"
+                strokeWidth={2}
+                strokeDasharray="6 3"
+                markerEnd="url(#drag-arrow)"
+              />
+            </svg>
           )}
-        </TransformWrapper>
+        </div>
 
-        {/* Drag-to-connect temporary line (screen-space overlay, outside transform) */}
-        {dragging && (
-          <svg className="layout-drag-svg">
-            <defs>
-              <marker id="drag-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-                <polygon points="0 0, 8 3, 0 6" fill="#3182ce" />
-              </marker>
-            </defs>
-            <line
-              x1={dragging.x1}
-              y1={dragging.y1}
-              x2={dragPos.x2}
-              y2={dragPos.y2}
-              stroke="#3182ce"
-              strokeWidth={2}
-              strokeDasharray="6 3"
-              markerEnd="url(#drag-arrow)"
-            />
-          </svg>
+        {showAddBoxModal && (
+          <AddBoxModal onAdd={handleAddBox} onClose={onCloseAddBoxModal} />
         )}
       </div>
 
-      {showAddBoxModal && (
-        <AddBoxModal onAdd={handleAddBox} onClose={onCloseAddBoxModal} />
-      )}
-    </div>
+      {/* ── Connections rendered in screen space (outside TransformComponent) ──
+          Xarrow uses getBoundingClientRect() for start/end element positions.
+          Being outside the scaled canvas means coordinates match exactly — arrows
+          stay between boxes at any zoom level and follow boxes during drag. */}
+      {connections.map((conn) => (
+        <Xarrow
+          key={conn.id}
+          start={conn.fromId}
+          end={conn.toId}
+          color="#1a2744"
+          strokeWidth={2}
+          path="smooth"
+          headSize={6}
+          zIndex={100}
+          passProps={{
+            onClick: () => handleDeleteConnection(conn.id),
+            style: { cursor: 'pointer' },
+            title: 'Click to remove connection',
+          }}
+        />
+      ))}
+    </Xwrapper>
   );
 }
 

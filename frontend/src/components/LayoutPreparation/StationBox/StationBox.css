@@ -4,13 +4,19 @@
   border: 2px solid #2d3748;
   border-radius: 4px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-  min-width: 200px;
+  /* Width is determined by content (stationCount × 40px columns).
+     Height is fixed to exactly 4 grid cells = 160px so boxes align to the grid. */
+  height: 160px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   user-select: none;
   z-index: 5;
+  overflow: hidden;
 }
 
 .station-box--collapsed {
-  min-width: 160px;
+  height: 40px;
 }
 
 .station-box-header {
@@ -22,6 +28,7 @@
   border-bottom: 1px solid #cbd5e0;
   cursor: grab;
   border-radius: 2px 2px 0 0;
+  flex-shrink: 0;
 }
 
 .station-box-header:active {
@@ -72,6 +79,8 @@
 /* Grid */
 .station-box-body {
   overflow-x: auto;
+  flex: 1;
+  overflow-y: hidden;
 }
 
 .station-grid {
@@ -86,14 +95,17 @@
 }
 
 .station-grid-header-cell {
-  min-width: 52px;
-  padding: 3px 4px;
+  width: 40px;
+  min-width: 40px;
+  padding: 3px 2px;
   text-align: center;
   font-size: 10px;
   font-weight: 700;
   color: #ffffff;
   border-right: 1px solid #1c4532;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .station-grid-header-cell:last-child {
@@ -106,7 +118,8 @@
 }
 
 .station-grid-data-cell {
-  min-width: 52px;
+  width: 40px;
+  min-width: 40px;
   height: 28px;
   border-right: 1px solid #e2e8f0;
   background-color: #ffffff;
