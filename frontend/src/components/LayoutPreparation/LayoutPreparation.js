@@ -71,9 +71,17 @@ function stateFromApi(apiLayout) {
     Array.from({ length: count }, (_, i) => `${prefix}-${String(i + 1).padStart(2, '0')}`);
 
   const boxes = apiLayout.station_boxes.map((b) => {
-    let parsedZLabels = {};
-    if (b.z_labels) {
-      try { parsedZLabels = JSON.parse(b.z_labels); } catch (_) { parsedZLabels = {}; }
+    let parsedStationData = {};
+    if (b.station_data) {
+      try { parsedStationData = JSON.parse(b.station_data); } catch (_) { parsedStationData = {}; }
+    } else if (b.z_labels) {
+      // Migrate legacy z_labels into stationData
+      try {
+        const zMap = JSON.parse(b.z_labels);
+        Object.entries(zMap).forEach(([sid, z]) => {
+          parsedStationData[sid] = { Z: z, M: '', P: '', D: '', U: '' };
+        });
+      } catch (_) { parsedStationData = {}; }
     }
     return {
       id: `db-box-${b.id}`,
@@ -82,7 +90,7 @@ function stateFromApi(apiLayout) {
       stationIds: b.station_ids
         ? (typeof b.station_ids === 'string' ? b.station_ids.split(',') : b.station_ids)
         : buildIds(b.prefix, b.station_count),
-      zLabels: parsedZLabels,
+      stationData: parsedStationData,
       position: { x: b.position_x, y: b.position_y },
       orderIndex: b.order_index,
     };
@@ -188,7 +196,7 @@ function LayoutPreparation({
         dbId: null,
         name: boxData.name,
         stationIds: boxData.stationIds,
-        zLabels: boxData.zLabels || {},
+        stationData: boxData.stationData || {},
         orderIndex: prev.length,
         position: { x: 0, y: 0 },
       };
@@ -253,7 +261,7 @@ function LayoutPreparation({
         prefix: b.stationIds?.[0]?.split('-')[0] ?? 'ST',
         station_count: b.stationIds?.length ?? 0,
         station_ids: b.stationIds?.join(','),
-        z_labels: JSON.stringify(b.zLabels ?? {}),
+        station_data: JSON.stringify(b.stationData ?? {}),
         position_x: b.position.x,
         position_y: b.position.y,
         order_index: b.orderIndex,
@@ -428,7 +436,7 @@ function LayoutPreparation({
                         id={box.id}
                         name={box.name}
                         stationIds={box.stationIds}
-                        zLabels={box.zLabels}
+                        stationData={box.stationData}
                         position={box.position}
                         onPositionChange={handleBoxPositionChange}
                         onDelete={handleDeleteBox}

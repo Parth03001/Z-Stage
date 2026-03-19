@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { X } from 'lucide-react';
 import './AddBoxModal.css';
 
+const LABELS = ['Z', 'M', 'P', 'D', 'U'];
+
 function buildAutoIds(prefix, count) {
   const p = prefix.trim().toUpperCase();
   return Array.from({ length: count }, (_, i) => `${p}-${String(i + 1).padStart(2, '0')}`);
@@ -9,20 +11,23 @@ function buildAutoIds(prefix, count) {
 
 const DEFAULT_FORM = { name: '', prefix: '', stationCount: 5 };
 
+// stationData shape: { [stationId]: { Z: '', M: '', P: '', D: '', U: '' } }
+function emptyRow() {
+  return Object.fromEntries(LABELS.map((l) => [l, '']));
+}
+
 function AddBoxModal({ onAdd, onClose }) {
   const [form, setForm] = useState(DEFAULT_FORM);
   const [mode, setMode] = useState('auto'); // 'auto' | 'custom'
   const [customText, setCustomText] = useState('');
   const [errors, setErrors] = useState({});
-  const [zLabels, setZLabels] = useState({}); // { stationId: zValue }
+  const [stationData, setStationData] = useState({}); // { stationId: { Z, M, P, D, U } }
 
-  // IDs generated from prefix+count (shown as preview in auto mode)
   const autoIds = useMemo(() => {
     if (!form.prefix.trim() || form.stationCount < 1) return [];
     return buildAutoIds(form.prefix, Number(form.stationCount));
   }, [form.prefix, form.stationCount]);
 
-  // When switching to custom mode, pre-populate with auto IDs
   const handleModeSwitch = (newMode) => {
     if (newMode === 'custom' && mode === 'auto') {
       setCustomText(autoIds.join('\n'));
@@ -40,7 +45,6 @@ function AddBoxModal({ onAdd, onClose }) {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  // Parse the custom textarea: split by newline or comma, trim, dedupe empties
   const parsedCustomIds = useMemo(
     () =>
       customText
@@ -52,26 +56,28 @@ function AddBoxModal({ onAdd, onClose }) {
 
   const previewIds = mode === 'auto' ? autoIds : parsedCustomIds;
 
-  // Sync zLabels keys when station IDs change — preserve existing values
+  // Sync stationData keys when station IDs change — preserve existing values
   useEffect(() => {
-    setZLabels((prev) => {
+    setStationData((prev) => {
       const next = {};
       previewIds.forEach((sid) => {
-        next[sid] = prev[sid] ?? '';
+        next[sid] = prev[sid] ?? emptyRow();
       });
       return next;
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [previewIds.join(',')]);
 
-  const handleZLabelChange = (sid, value) => {
-    setZLabels((prev) => ({ ...prev, [sid]: value }));
+  const handleCellChange = (sid, label, value) => {
+    setStationData((prev) => ({
+      ...prev,
+      [sid]: { ...prev[sid], [label]: value },
+    }));
   };
 
   const validate = () => {
     const errs = {};
     if (!form.name.trim()) errs.name = 'Station / line name is required';
-
     if (mode === 'auto') {
       if (!form.prefix.trim()) errs.prefix = 'Prefix is required';
       if (!form.stationCount || form.stationCount < 1) errs.stationCount = 'At least 1 station required';
@@ -89,7 +95,7 @@ function AddBoxModal({ onAdd, onClose }) {
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
     const stationIds = mode === 'auto' ? autoIds : parsedCustomIds;
-    onAdd({ name: form.name.trim(), stationIds, zLabels });
+    onAdd({ name: form.name.trim(), stationIds, stationData });
     onClose();
   };
 
@@ -190,42 +196,42 @@ function AddBoxModal({ onAdd, onClose }) {
             </div>
           )}
 
-          {/* ID preview chips */}
-          {previewIds.length > 0 && (
-            <div className="modal-id-preview">
-              <span className="modal-id-preview-label">{previewIds.length} station{previewIds.length !== 1 ? 's' : ''}:</span>
-              <div className="modal-id-chips">
-                {previewIds.slice(0, 20).map((id) => (
-                  <span key={id} className="modal-id-chip">{id}</span>
-                ))}
-                {previewIds.length > 20 && (
-                  <span className="modal-id-chip modal-id-chip--more">+{previewIds.length - 20} more</span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Z Labels — one per station */}
+          {/* Station data table — Z, M, P, D, U per station */}
           {previewIds.length > 0 && (
             <div className="modal-field">
               <label className="modal-label">
-                Z Labels
-                <span className="modal-label-hint"> — one per station (optional)</span>
+                Station Values
+                <span className="modal-label-hint"> — Z / M / P / D / U per station (optional)</span>
               </label>
-              <div className="modal-z-grid">
-                {previewIds.map((sid) => (
-                  <div key={sid} className="modal-z-row">
-                    <span className="modal-z-station-id">{sid}</span>
-                    <input
-                      className="modal-z-input"
-                      type="text"
-                      value={zLabels[sid] ?? ''}
-                      onChange={(e) => handleZLabelChange(sid, e.target.value)}
-                      placeholder="Z value"
-                      maxLength={20}
-                    />
-                  </div>
-                ))}
+              <div className="modal-station-table-wrap">
+                <table className="modal-station-table">
+                  <thead>
+                    <tr>
+                      <th className="modal-st-head modal-st-head--id">Station</th>
+                      {LABELS.map((l) => (
+                        <th key={l} className="modal-st-head">{l}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewIds.map((sid) => (
+                      <tr key={sid}>
+                        <td className="modal-st-id">{sid}</td>
+                        {LABELS.map((l) => (
+                          <td key={l} className="modal-st-cell">
+                            <input
+                              className="modal-st-input"
+                              type="text"
+                              value={stationData[sid]?.[l] ?? ''}
+                              onChange={(e) => handleCellChange(sid, l, e.target.value)}
+                              maxLength={20}
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}

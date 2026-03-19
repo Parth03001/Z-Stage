@@ -8,7 +8,7 @@ function StationBox({
   id,
   name,
   stationIds,
-  zLabels = {},
+  stationData = {},
   position: parentPosition,
   onPositionChange,
   onDelete,
@@ -107,21 +107,14 @@ function StationBox({
                 </tr>
               </thead>
               <tbody>
-                {/* Z row — one label+value cell per station */}
-                <tr>
-                  {stationIds.map((sid) => (
-                    <React.Fragment key={sid}>
-                      <td className="station-grid-label station-grid-label--z">Z</td>
-                      <td className="station-grid-value station-grid-value--z">{zLabels[sid] || ''}</td>
-                    </React.Fragment>
-                  ))}
-                </tr>
-                {['M', 'P', 'D', 'U'].map((label) => (
+                {['Z', 'M', 'P', 'D', 'U'].map((label) => (
                   <tr key={label}>
                     {stationIds.map((sid) => (
                       <React.Fragment key={sid}>
-                        <td className="station-grid-label">{label}</td>
-                        <td className="station-grid-value" />
+                        <td className={`station-grid-label${label === 'Z' ? ' station-grid-label--z' : ''}`}>{label}</td>
+                        <td className={`station-grid-value${label === 'Z' ? ' station-grid-value--z' : ''}`}>
+                          {stationData[sid]?.[label] || ''}
+                        </td>
                       </React.Fragment>
                     ))}
                   </tr>

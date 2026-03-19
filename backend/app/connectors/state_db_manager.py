@@ -128,6 +128,7 @@ class StateDBManager:
         migrations = [
             "ALTER TABLE station_boxes ADD COLUMN IF NOT EXISTS station_ids TEXT",
             "ALTER TABLE station_boxes ADD COLUMN IF NOT EXISTS z_labels TEXT",
+            "ALTER TABLE station_boxes ADD COLUMN IF NOT EXISTS station_data TEXT",
         ]
         try:
             with self.engine.connect() as conn:

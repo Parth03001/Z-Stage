@@ -11,6 +11,7 @@ class StationBoxBase(BaseModel):
     station_count: int
     station_ids: Optional[str] = None
     z_labels: Optional[str] = None
+    station_data: Optional[str] = None
     position_x: float = 0.0
     position_y: float = 0.0
     order_index: int = 0
@@ -116,6 +117,7 @@ class SnapshotBox(BaseModel):
     station_count: int
     station_ids: Optional[str] = None
     z_labels: Optional[str] = None
+    station_data: Optional[str] = None
     position_x: float = 0.0
     position_y: float = 0.0
     order_index: int = 0

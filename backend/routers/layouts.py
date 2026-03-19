@@ -115,6 +115,7 @@ def _execute_snapshot(layout_id: int, payload: schemas.LayoutSnapshotCreate, con
                     "station_count": box.station_count,
                     "station_ids": box.station_ids,
                     "z_labels": box.z_labels,
+                    "station_data": box.station_data,
                     "position_x": box.position_x,
                     "position_y": box.position_y,
                     "order_index": box.order_index,

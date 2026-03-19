@@ -231,51 +231,86 @@
   border-color: #cbd5e0;
 }
 
-/* Z Labels grid */
-.modal-z-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 200px;
+/* Station values table */
+.modal-station-table-wrap {
+  max-height: 220px;
   overflow-y: auto;
   border: 1px solid #e2e8f0;
   border-radius: 5px;
-  padding: 8px;
   background-color: #f7fafc;
 }
 
-.modal-z-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.modal-station-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
 }
 
-.modal-z-station-id {
-  font-size: 11px;
+.modal-st-head {
+  position: sticky;
+  top: 0;
+  padding: 5px 4px;
+  background-color: #1a2744;
+  color: #ffffff;
+  font-weight: 700;
+  text-align: center;
+  border-right: 1px solid #2a3f6f;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.modal-st-head--id {
+  text-align: left;
+  padding-left: 8px;
+  min-width: 80px;
+}
+
+.modal-st-head:last-child {
+  border-right: none;
+}
+
+.modal-station-table tbody tr:nth-child(even) {
+  background-color: #edf2f7;
+}
+
+.modal-station-table tbody tr:nth-child(odd) {
+  background-color: #f7fafc;
+}
+
+.modal-st-id {
   font-family: 'Courier New', monospace;
   color: #2b6cb0;
-  background-color: #ebf8ff;
-  border: 1px solid #bee3f8;
-  border-radius: 3px;
-  padding: 2px 6px;
-  min-width: 80px;
-  text-align: center;
-  flex-shrink: 0;
+  padding: 3px 4px 3px 8px;
+  border-right: 1px solid #e2e8f0;
+  white-space: nowrap;
+  font-weight: 600;
 }
 
-.modal-z-input {
-  flex: 1;
-  padding: 4px 8px;
+.modal-st-cell {
+  padding: 2px 3px;
+  border-right: 1px solid #e2e8f0;
+}
+
+.modal-st-cell:last-child {
+  border-right: none;
+}
+
+.modal-st-input {
+  width: 100%;
+  padding: 3px 5px;
   border: 1px solid #cbd5e0;
-  border-radius: 4px;
-  font-size: 12px;
+  border-radius: 3px;
+  font-size: 11px;
   color: #1a202c;
   outline: none;
+  background: #ffffff;
+  box-sizing: border-box;
+  min-width: 40px;
   transition: border-color 0.15s;
 }
 
-.modal-z-input:focus {
+.modal-st-input:focus {
   border-color: #4299e1;
-  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.15);
+  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.12);
 }
 

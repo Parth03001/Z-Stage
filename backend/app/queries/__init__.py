@@ -72,7 +72,7 @@ class LayoutQueries:
 class StationBoxQueries:
     LIST_BY_LAYOUT = """
         SELECT id, layout_id, name, prefix, station_count, station_ids, z_labels,
-               position_x, position_y, order_index, created_at, updated_at
+               station_data, position_x, position_y, order_index, created_at, updated_at
         FROM station_boxes
         WHERE layout_id = :layout_id
         ORDER BY order_index, id
@@ -80,7 +80,7 @@ class StationBoxQueries:
 
     GET_BOX = """
         SELECT id, layout_id, name, prefix, station_count, station_ids, z_labels,
-               position_x, position_y, order_index, created_at, updated_at
+               station_data, position_x, position_y, order_index, created_at, updated_at
         FROM station_boxes
         WHERE id = :box_id
     """
@@ -88,12 +88,12 @@ class StationBoxQueries:
     CREATE_BOX = """
         INSERT INTO station_boxes
             (layout_id, name, prefix, station_count, station_ids, z_labels,
-             position_x, position_y, order_index, created_at, updated_at)
+             station_data, position_x, position_y, order_index, created_at, updated_at)
         VALUES
             (:layout_id, :name, :prefix, :station_count, :station_ids, :z_labels,
-             :position_x, :position_y, :order_index, NOW(), NOW())
+             :station_data, :position_x, :position_y, :order_index, NOW(), NOW())
         RETURNING id, layout_id, name, prefix, station_count, station_ids, z_labels,
-                  position_x, position_y, order_index, created_at, updated_at
+                  station_data, position_x, position_y, order_index, created_at, updated_at
     """
 
     UPDATE_BOX = """
@@ -103,13 +103,14 @@ class StationBoxQueries:
             station_count = COALESCE(:station_count, station_count),
             station_ids   = COALESCE(:station_ids, station_ids),
             z_labels      = COALESCE(:z_labels, z_labels),
+            station_data  = COALESCE(:station_data, station_data),
             position_x    = COALESCE(:position_x, position_x),
             position_y    = COALESCE(:position_y, position_y),
             order_index   = COALESCE(:order_index, order_index),
             updated_at    = NOW()
         WHERE id = :box_id
         RETURNING id, layout_id, name, prefix, station_count, station_ids, z_labels,
-                  position_x, position_y, order_index, created_at, updated_at
+                  station_data, position_x, position_y, order_index, created_at, updated_at
     """
 
     DELETE_BOX = "DELETE FROM station_boxes WHERE id = :box_id"
