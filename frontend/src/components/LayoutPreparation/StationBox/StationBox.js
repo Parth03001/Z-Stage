@@ -107,9 +107,11 @@ function StationBox({
                 </tr>
               </thead>
               <tbody>
-                {/* Z row — single merged cell, invisible text */}
+                {/* Z row — one cell per station (spans both label+value cols), invisible text */}
                 <tr>
-                  <td colSpan={stationIds.length * 2} className="station-grid-label--z">Z</td>
+                  {stationIds.map((sid) => (
+                    <td key={sid} colSpan={2} className="station-grid-label--z">Z</td>
+                  ))}
                 </tr>
                 {['M', 'P', 'D', 'U'].map((label) => (
                   <tr key={label}>
