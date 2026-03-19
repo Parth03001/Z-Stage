@@ -1,8 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X } from 'lucide-react';
 import './AddBoxModal.css';
-
-const LABELS = ['Z', 'M', 'P', 'D', 'U'];
 
 function buildAutoIds(prefix, count) {
   const p = prefix.trim().toUpperCase();
@@ -11,17 +9,11 @@ function buildAutoIds(prefix, count) {
 
 const DEFAULT_FORM = { name: '', prefix: '', stationCount: 5 };
 
-// stationData shape: { [stationId]: { Z: '', M: '', P: '', D: '', U: '' } }
-function emptyRow() {
-  return Object.fromEntries(LABELS.map((l) => [l, '']));
-}
-
 function AddBoxModal({ onAdd, onClose }) {
   const [form, setForm] = useState(DEFAULT_FORM);
   const [mode, setMode] = useState('auto'); // 'auto' | 'custom'
   const [customText, setCustomText] = useState('');
   const [errors, setErrors] = useState({});
-  const [stationData, setStationData] = useState({}); // { stationId: { Z, M, P, D, U } }
 
   const autoIds = useMemo(() => {
     if (!form.prefix.trim() || form.stationCount < 1) return [];
@@ -56,25 +48,6 @@ function AddBoxModal({ onAdd, onClose }) {
 
   const previewIds = mode === 'auto' ? autoIds : parsedCustomIds;
 
-  // Sync stationData keys when station IDs change — preserve existing values
-  useEffect(() => {
-    setStationData((prev) => {
-      const next = {};
-      previewIds.forEach((sid) => {
-        next[sid] = prev[sid] ?? emptyRow();
-      });
-      return next;
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewIds.join(',')]);
-
-  const handleCellChange = (sid, label, value) => {
-    setStationData((prev) => ({
-      ...prev,
-      [sid]: { ...prev[sid], [label]: value },
-    }));
-  };
-
   const validate = () => {
     const errs = {};
     if (!form.name.trim()) errs.name = 'Station / line name is required';
@@ -95,7 +68,7 @@ function AddBoxModal({ onAdd, onClose }) {
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
     const stationIds = mode === 'auto' ? autoIds : parsedCustomIds;
-    onAdd({ name: form.name.trim(), stationIds, stationData });
+    onAdd({ name: form.name.trim(), stationIds });
     onClose();
   };
 
@@ -196,42 +169,17 @@ function AddBoxModal({ onAdd, onClose }) {
             </div>
           )}
 
-          {/* Station data table — Z, M, P, D, U per station */}
+          {/* ID preview chips */}
           {previewIds.length > 0 && (
-            <div className="modal-field">
-              <label className="modal-label">
-                Station Values
-                <span className="modal-label-hint"> — Z / M / P / D / U per station (optional)</span>
-              </label>
-              <div className="modal-station-table-wrap">
-                <table className="modal-station-table">
-                  <thead>
-                    <tr>
-                      <th className="modal-st-head modal-st-head--id">Station</th>
-                      {LABELS.map((l) => (
-                        <th key={l} className="modal-st-head">{l}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {previewIds.map((sid) => (
-                      <tr key={sid}>
-                        <td className="modal-st-id">{sid}</td>
-                        {LABELS.map((l) => (
-                          <td key={l} className="modal-st-cell">
-                            <input
-                              className="modal-st-input"
-                              type="text"
-                              value={stationData[sid]?.[l] ?? ''}
-                              onChange={(e) => handleCellChange(sid, l, e.target.value)}
-                              maxLength={20}
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className="modal-id-preview">
+              <span className="modal-id-preview-label">{previewIds.length} station{previewIds.length !== 1 ? 's' : ''}:</span>
+              <div className="modal-id-chips">
+                {previewIds.slice(0, 20).map((id) => (
+                  <span key={id} className="modal-id-chip">{id}</span>
+                ))}
+                {previewIds.length > 20 && (
+                  <span className="modal-id-chip modal-id-chip--more">+{previewIds.length - 20} more</span>
+                )}
               </div>
             </div>
           )}

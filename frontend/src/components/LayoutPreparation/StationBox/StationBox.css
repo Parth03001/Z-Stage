@@ -123,21 +123,14 @@
   border-bottom: 1px solid #e2e8f0;
 }
 
-/* Z label row — distinct background to separate from M/P/D/U rows */
+/* Z label — invisible (white on white), cell still occupies space */
 .station-grid-label--z {
-  color: #1a2744;
-  background-color: #e2ecf7;
-  border-bottom: 2px solid #b2c8e0;
+  color: #ffffff;
+  background-color: #ffffff;
 }
 
 .station-grid-value--z {
-  background-color: #eef4fb;
-  border-bottom: 2px solid #b2c8e0;
-  font-size: 9px;
-  font-weight: 600;
-  color: #1a2744;
-  text-align: center;
-  vertical-align: middle;
+  background-color: #ffffff;
 }
 
 /* Right value sub-column */
