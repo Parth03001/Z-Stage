@@ -107,12 +107,16 @@ function StationBox({
                 </tr>
               </thead>
               <tbody>
-                {['Z', 'M', 'P', 'D', 'U'].map((label) => (
+                {/* Z row — single merged cell, invisible text */}
+                <tr>
+                  <td colSpan={stationIds.length * 2} className="station-grid-label--z">Z</td>
+                </tr>
+                {['M', 'P', 'D', 'U'].map((label) => (
                   <tr key={label}>
                     {stationIds.map((sid) => (
                       <React.Fragment key={sid}>
-                        <td className={`station-grid-label${label === 'Z' ? ' station-grid-label--z' : ''}`}>{label}</td>
-                        <td className={`station-grid-value${label === 'Z' ? ' station-grid-value--z' : ''}`}>
+                        <td className="station-grid-label">{label}</td>
+                        <td className="station-grid-value">
                           {stationData[sid]?.[label] || ''}
                         </td>
                       </React.Fragment>
