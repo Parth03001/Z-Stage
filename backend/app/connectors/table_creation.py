@@ -112,6 +112,8 @@ create_dynamic_table(
         Column("name", String(255), nullable=False),
         Column("prefix", String(50), nullable=False),
         Column("station_count", Integer, nullable=False),
+        Column("station_ids", String, nullable=True),
+        Column("z_labels", String, nullable=True),
         Column("position_x", Float, nullable=False, default=0.0),
         Column("position_y", Float, nullable=False, default=0.0),
         Column("order_index", Integer, nullable=False, default=0),

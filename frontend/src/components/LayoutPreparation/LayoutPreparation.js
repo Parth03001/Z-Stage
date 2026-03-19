@@ -70,16 +70,23 @@ function stateFromApi(apiLayout) {
   const buildIds = (prefix, count) =>
     Array.from({ length: count }, (_, i) => `${prefix}-${String(i + 1).padStart(2, '0')}`);
 
-  const boxes = apiLayout.station_boxes.map((b) => ({
-    id: `db-box-${b.id}`,
-    dbId: b.id,
-    name: b.name,
-    stationIds: b.station_ids
-      ? (typeof b.station_ids === 'string' ? b.station_ids.split(',') : b.station_ids)
-      : buildIds(b.prefix, b.station_count),
-    position: { x: b.position_x, y: b.position_y },
-    orderIndex: b.order_index,
-  }));
+  const boxes = apiLayout.station_boxes.map((b) => {
+    let parsedZLabels = {};
+    if (b.z_labels) {
+      try { parsedZLabels = JSON.parse(b.z_labels); } catch (_) { parsedZLabels = {}; }
+    }
+    return {
+      id: `db-box-${b.id}`,
+      dbId: b.id,
+      name: b.name,
+      stationIds: b.station_ids
+        ? (typeof b.station_ids === 'string' ? b.station_ids.split(',') : b.station_ids)
+        : buildIds(b.prefix, b.station_count),
+      zLabels: parsedZLabels,
+      position: { x: b.position_x, y: b.position_y },
+      orderIndex: b.order_index,
+    };
+  });
 
   const bypassIcons = apiLayout.bypass_icons.map((ic) => ({
     id: `db-bypass-${ic.id}`,
@@ -181,6 +188,7 @@ function LayoutPreparation({
         dbId: null,
         name: boxData.name,
         stationIds: boxData.stationIds,
+        zLabels: boxData.zLabels || {},
         orderIndex: prev.length,
         position: { x: 0, y: 0 },
       };
@@ -245,6 +253,7 @@ function LayoutPreparation({
         prefix: b.stationIds?.[0]?.split('-')[0] ?? 'ST',
         station_count: b.stationIds?.length ?? 0,
         station_ids: b.stationIds?.join(','),
+        z_labels: JSON.stringify(b.zLabels ?? {}),
         position_x: b.position.x,
         position_y: b.position.y,
         order_index: b.orderIndex,
@@ -419,6 +428,7 @@ function LayoutPreparation({
                         id={box.id}
                         name={box.name}
                         stationIds={box.stationIds}
+                        zLabels={box.zLabels}
                         position={box.position}
                         onPositionChange={handleBoxPositionChange}
                         onDelete={handleDeleteBox}

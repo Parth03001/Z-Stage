@@ -113,11 +113,30 @@ class StateDBManager:
                 logger.info("All tables already present — nothing created")
 
             logger.info(f"Total tables in '{self.settings.POSTGRES_DB}': {len(new_tables)}")
+
+            # Migrate existing tables to add new columns if they don't exist
+            self._migrate_add_columns()
+
             self.engine.dispose()
 
         except Exception as e:
             logger.error(f"Error creating tables: {e}")
             raise
+
+    def _migrate_add_columns(self):
+        """Add new columns to existing tables if they don't already exist."""
+        migrations = [
+            "ALTER TABLE station_boxes ADD COLUMN IF NOT EXISTS station_ids TEXT",
+            "ALTER TABLE station_boxes ADD COLUMN IF NOT EXISTS z_labels TEXT",
+        ]
+        try:
+            with self.engine.connect() as conn:
+                for sql in migrations:
+                    conn.execute(text(sql))
+                conn.commit()
+            logger.info("Column migrations applied successfully")
+        except Exception as e:
+            logger.warning(f"Column migration warning (may be harmless): {e}")
 
     def drop_all_tables(self):
         """Drop all Z-Stage tables. USE WITH EXTREME CAUTION."""

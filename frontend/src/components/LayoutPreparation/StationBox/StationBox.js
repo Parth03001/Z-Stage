@@ -8,6 +8,7 @@ function StationBox({
   id,
   name,
   stationIds,
+  zLabels = {},
   position: parentPosition,
   onPositionChange,
   onDelete,
@@ -106,9 +107,14 @@ function StationBox({
                 </tr>
               </thead>
               <tbody>
-                {/* Z row — single merged cell across all stations, white = invisible */}
+                {/* Z row — one label+value cell per station */}
                 <tr>
-                  <td colSpan={stationIds.length * 2} className="station-grid-label station-grid-label--z">Z</td>
+                  {stationIds.map((sid) => (
+                    <React.Fragment key={sid}>
+                      <td className="station-grid-label station-grid-label--z">Z</td>
+                      <td className="station-grid-value station-grid-value--z">{zLabels[sid] || ''}</td>
+                    </React.Fragment>
+                  ))}
                 </tr>
                 {['M', 'P', 'D', 'U'].map((label) => (
                   <tr key={label}>

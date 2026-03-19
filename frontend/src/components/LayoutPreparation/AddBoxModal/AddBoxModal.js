@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { X } from 'lucide-react';
 import './AddBoxModal.css';
 
@@ -14,6 +14,7 @@ function AddBoxModal({ onAdd, onClose }) {
   const [mode, setMode] = useState('auto'); // 'auto' | 'custom'
   const [customText, setCustomText] = useState('');
   const [errors, setErrors] = useState({});
+  const [zLabels, setZLabels] = useState({}); // { stationId: zValue }
 
   // IDs generated from prefix+count (shown as preview in auto mode)
   const autoIds = useMemo(() => {
@@ -49,6 +50,24 @@ function AddBoxModal({ onAdd, onClose }) {
     [customText],
   );
 
+  const previewIds = mode === 'auto' ? autoIds : parsedCustomIds;
+
+  // Sync zLabels keys when station IDs change — preserve existing values
+  useEffect(() => {
+    setZLabels((prev) => {
+      const next = {};
+      previewIds.forEach((sid) => {
+        next[sid] = prev[sid] ?? '';
+      });
+      return next;
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewIds.join(',')]);
+
+  const handleZLabelChange = (sid, value) => {
+    setZLabels((prev) => ({ ...prev, [sid]: value }));
+  };
+
   const validate = () => {
     const errs = {};
     if (!form.name.trim()) errs.name = 'Station / line name is required';
@@ -70,11 +89,9 @@ function AddBoxModal({ onAdd, onClose }) {
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
     const stationIds = mode === 'auto' ? autoIds : parsedCustomIds;
-    onAdd({ name: form.name.trim(), stationIds });
+    onAdd({ name: form.name.trim(), stationIds, zLabels });
     onClose();
   };
-
-  const previewIds = mode === 'auto' ? autoIds : parsedCustomIds;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -184,6 +201,31 @@ function AddBoxModal({ onAdd, onClose }) {
                 {previewIds.length > 20 && (
                   <span className="modal-id-chip modal-id-chip--more">+{previewIds.length - 20} more</span>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Z Labels — one per station */}
+          {previewIds.length > 0 && (
+            <div className="modal-field">
+              <label className="modal-label">
+                Z Labels
+                <span className="modal-label-hint"> — one per station (optional)</span>
+              </label>
+              <div className="modal-z-grid">
+                {previewIds.map((sid) => (
+                  <div key={sid} className="modal-z-row">
+                    <span className="modal-z-station-id">{sid}</span>
+                    <input
+                      className="modal-z-input"
+                      type="text"
+                      value={zLabels[sid] ?? ''}
+                      onChange={(e) => handleZLabelChange(sid, e.target.value)}
+                      placeholder="Z value"
+                      maxLength={20}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           )}
