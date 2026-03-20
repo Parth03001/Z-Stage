@@ -24,6 +24,11 @@ const boxSize = (stationCount) => ({
 
 const snap = (v) => Math.round(v / GRID) * GRID;
 
+// Bypass icon is 62×62px — snap so its visual center lands on a grid intersection
+const BYPASS_SIZE = 62;
+const BYPASS_HALF = BYPASS_SIZE / 2;
+const snapBypass = (v) => Math.round((v + BYPASS_HALF) / GRID) * GRID - BYPASS_HALF;
+
 const overlaps = (a, b) => {
   const sa = boxSize(a.stationCount ?? a.stationIds?.length ?? 5);
   const sb = boxSize(b.stationCount ?? b.stationIds?.length ?? 5);
@@ -232,12 +237,12 @@ function LayoutPreparation({
     const id = uid();
     setBypassIcons((prev) => [
       ...prev,
-      { id, dbId: null, position: { x: 40 + prev.length * 20, y: 40 + prev.length * 20 } },
+      { id, dbId: null, position: { x: snapBypass(GRID + prev.length * GRID * 2), y: snapBypass(GRID) } },
     ]);
   }, []);
 
   const handleBypassPositionChange = useCallback((id, rawPos) => {
-    const snapped = { x: snap(rawPos.x), y: snap(rawPos.y) };
+    const snapped = { x: snapBypass(rawPos.x), y: snapBypass(rawPos.y) };
     setBypassIcons((prev) => prev.map((b) => (b.id === id ? { ...b, position: snapped } : b)));
   }, []);
 
