@@ -1,7 +1,7 @@
 .sidebar {
   width: 220px;
   min-height: 100vh;
-  background-color: #1a2744;
+  background-color: var(--mahindra-red);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -37,7 +37,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #a0aec0;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 14px;
   font-weight: 500;
   text-align: left;
@@ -51,9 +51,9 @@
 }
 
 .sidebar-nav-item--active {
-  background-color: rgba(66, 153, 225, 0.2);
-  color: #63b3ed;
-  border-left: 3px solid #63b3ed;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-left: 3px solid #ffffff;
 }
 
 .sidebar-nav-icon {
@@ -80,7 +80,7 @@
   flex-direction: column;
   gap: 5px;
   background-color: rgba(0, 0, 0, 0.15);
-  border-left: 3px solid #63b3ed;
+  border-left: 3px solid #ffffff;
 }
 
 .sidebar-sub-btn {
@@ -105,7 +105,7 @@
 /* Primary — Add Box */
 .sidebar-sub-btn--primary {
   background-color: rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
+  color: #ffffff;
   border-color: rgba(255, 255, 255, 0.12);
 }
 
@@ -126,13 +126,13 @@
 
 /* Save */
 .sidebar-sub-btn--save {
-  background-color: rgba(66, 153, 225, 0.15);
-  color: #90cdf4;
-  border-color: rgba(66, 153, 225, 0.3);
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .sidebar-sub-btn--save:hover:not(:disabled) {
-  background-color: rgba(66, 153, 225, 0.25);
+  background-color: rgba(255, 255, 255, 0.25);
 }
 
 .sidebar-sub-btn--save:disabled {
@@ -156,7 +156,7 @@
 
 .sidebar-load-label {
   font-size: 10px;
-  color: #718096;
+  color: rgba(255, 255, 255, 0.6);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -166,13 +166,13 @@
   border-radius: 4px;
   font-size: 12px;
   background-color: rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
+  color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.15);
   cursor: pointer;
   width: 100%;
 }
 
 .sidebar-load-select option {
-  background-color: #1a2744;
-  color: #e2e8f0;
+  background-color: var(--mahindra-red);
+  color: #ffffff;
 }

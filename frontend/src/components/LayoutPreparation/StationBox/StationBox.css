@@ -1,9 +1,9 @@
 .station-box {
   position: absolute;
-  background-color: #f7fafc;
-  border: 2px solid #2d3748;
+  background-color: #ffffff;
+  border: 2px solid var(--border-color);
   border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--card-shadow);
   /* Width is determined by content (stationCount × 40px columns).
      Height is fixed to exactly 5 grid cells = 200px so boxes align to the grid. */
   height: 160px;
@@ -25,8 +25,8 @@
   align-items: center;
   padding: 5px 10px;
   gap: 2px;
-  background-color: #f0f4f8;
-  border-bottom: 1px solid #cbd5e0;
+  background-color: var(--bg-light);
+  border-bottom: 1px solid var(--border-color);
   cursor: grab;
   border-radius: 2px 2px 0 0;
   flex-shrink: 0;
@@ -39,7 +39,7 @@
 .station-box-title {
   font-size: 13px;
   font-weight: 700;
-  color: #1a202c;
+  color: var(--text-dark);
   letter-spacing: 0.5px;
 }
 
@@ -51,12 +51,12 @@
 
 .station-box-ctrl-btn {
   background: none;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--border-color);
   border-radius: 3px;
   cursor: pointer;
   font-size: 10px;
   padding: 2px 5px;
-  color: #4a5568;
+  color: var(--text-dark);
   line-height: 1;
   display: flex;
   align-items: center;
@@ -65,7 +65,7 @@
 }
 
 .station-box-ctrl-btn:hover {
-  background-color: #e2e8f0;
+  background-color: var(--border-color);
 }
 
 .station-box-ctrl-btn--delete {
@@ -97,8 +97,8 @@
   font-size: 10px;
   font-weight: 700;
   color: #ffffff;
-  background-color: #45b480;
-  border-right: 1px solid #1c4532;
+  background-color: var(--mahindra-red);
+  border-right: 1px solid var(--mahindra-red-dark);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -118,18 +118,18 @@
   font-size: 9px;
   font-weight: 700;
   color: transparent;
-  background-color: #edf2f7;
-  border-right: 1px solid #cbd5e0;
-  border-bottom: 1px solid #e2e8f0;
+  background-color: var(--bg-light);
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* Z label — one cell per station spanning label+value cols, invisible text */
 .station-grid-label--z {
   color: transparent;
-  background-color: #edf2f7;
+  background-color: var(--bg-light);
   height: 20px;
-  border-right: 1px solid #cbd5e0;
-  border-bottom: 1px solid #e2e8f0;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
   font-size: 9px;
   font-weight: 700;
   text-align: center;
@@ -142,8 +142,8 @@
   min-width: 26px;
   height: 20px;
   background-color: #ffffff;
-  border-right: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* Remove trailing borders on last station */
@@ -171,17 +171,17 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #3182ce;
+  background: var(--mahindra-red);
   border: 2px solid #fff;
   cursor: crosshair;
   pointer-events: all;
   padding: 0;
-  box-shadow: 0 0 0 1px #3182ce;
+  box-shadow: 0 0 0 1px var(--mahindra-red);
   transition: transform 0.1s, background-color 0.1s;
 }
 
 .station-port:hover {
-  background: #2b6cb0;
+  background: var(--mahindra-red-dark);
   transform: scale(1.4);
 }
 

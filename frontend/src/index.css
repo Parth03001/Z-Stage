@@ -1,3 +1,14 @@
+:root {
+  --mahindra-red: #dc143c;
+  --mahindra-red-dark: #b01030;
+  --bg-light: #f8f9fa;
+  --text-dark: #2c3e50;
+  --text-gray: #7f8c8d;
+  --border-color: #e9ecef;
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --popup-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -9,7 +20,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #edf2f7;
+  background-color: var(--bg-light);
 }
 
 code {

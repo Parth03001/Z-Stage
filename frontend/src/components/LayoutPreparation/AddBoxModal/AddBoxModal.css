@@ -11,7 +11,7 @@
 .modal-panel {
   background-color: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--popup-shadow);
   width: 420px;
   max-width: 95vw;
   max-height: 90vh;
@@ -23,8 +23,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #e2e8f0;
-  background-color: #1a2744;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--mahindra-red);
   border-radius: 8px 8px 0 0;
 }
 
@@ -38,7 +38,7 @@
 .modal-close-btn {
   background: none;
   border: none;
-  color: #a0aec0;
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   font-size: 14px;
   padding: 2px 6px;
@@ -67,22 +67,22 @@
 .modal-label {
   font-size: 13px;
   font-weight: 600;
-  color: #2d3748;
+  color: var(--text-dark);
 }
 
 .modal-input {
   padding: 9px 12px;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--border-color);
   border-radius: 5px;
   font-size: 14px;
-  color: #1a202c;
+  color: var(--text-dark);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .modal-input:focus {
-  border-color: #4299e1;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+  border-color: var(--mahindra-red);
+  box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.2);
 }
 
 .modal-input--error {
@@ -96,7 +96,7 @@
 
 .modal-hint {
   font-size: 11px;
-  color: #718096;
+  color: var(--text-gray);
   font-style: italic;
 }
 
@@ -118,27 +118,27 @@
 }
 
 .modal-btn--cancel {
-  background-color: #edf2f7;
-  color: #4a5568;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
 }
 
 .modal-btn--cancel:hover {
-  background-color: #e2e8f0;
+  background-color: var(--border-color);
 }
 
 .modal-btn--add {
-  background-color: #1a2744;
+  background-color: var(--mahindra-red);
   color: #ffffff;
 }
 
 .modal-btn--add:hover {
-  background-color: #2a3f6f;
+  background-color: var(--mahindra-red-dark);
 }
 
 /* Mode toggle */
 .modal-mode-toggle {
   display: flex;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -150,35 +150,35 @@
   font-weight: 600;
   cursor: pointer;
   border: none;
-  background-color: #f7fafc;
-  color: #718096;
+  background-color: var(--bg-light);
+  color: var(--text-gray);
   transition: background-color 0.15s, color 0.15s;
 }
 
 .modal-mode-btn:first-child {
-  border-right: 1px solid #cbd5e0;
+  border-right: 1px solid var(--border-color);
 }
 
 .modal-mode-btn--active {
-  background-color: #1a2744;
+  background-color: var(--mahindra-red);
   color: #ffffff;
 }
 
 /* Label hint */
 .modal-label-hint {
   font-weight: 400;
-  color: #a0aec0;
+  color: var(--text-gray);
   font-size: 11px;
 }
 
 /* Textarea for custom IDs */
 .modal-textarea {
   padding: 9px 12px;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--border-color);
   border-radius: 5px;
   font-size: 13px;
   font-family: 'Courier New', monospace;
-  color: #1a202c;
+  color: var(--text-dark);
   resize: vertical;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -186,14 +186,14 @@
 }
 
 .modal-textarea:focus {
-  border-color: #4299e1;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+  border-color: var(--mahindra-red);
+  box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.2);
 }
 
 /* ID preview chips */
 .modal-id-preview {
-  background-color: #f7fafc;
-  border: 1px solid #e2e8f0;
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 10px 12px;
   display: flex;
@@ -204,7 +204,7 @@
 .modal-id-preview-label {
   font-size: 11px;
   font-weight: 600;
-  color: #718096;
+  color: var(--text-gray);
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
@@ -219,25 +219,25 @@
   font-size: 11px;
   font-family: 'Courier New', monospace;
   padding: 2px 6px;
-  background-color: #ebf8ff;
-  color: #2b6cb0;
-  border: 1px solid #bee3f8;
+  background-color: rgba(220, 20, 60, 0.05);
+  color: var(--mahindra-red);
+  border: 1px solid rgba(220, 20, 60, 0.2);
   border-radius: 3px;
 }
 
 .modal-id-chip--more {
-  background-color: #e2e8f0;
-  color: #718096;
-  border-color: #cbd5e0;
+  background-color: var(--border-color);
+  color: var(--text-gray);
+  border-color: var(--border-color);
 }
 
 /* Station values table */
 .modal-station-table-wrap {
   max-height: 220px;
   overflow-y: auto;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
   border-radius: 5px;
-  background-color: #f7fafc;
+  background-color: var(--bg-light);
 }
 
 .modal-station-table {
@@ -250,11 +250,11 @@
   position: sticky;
   top: 0;
   padding: 5px 4px;
-  background-color: #1a2744;
+  background-color: var(--mahindra-red);
   color: #ffffff;
   font-weight: 700;
   text-align: center;
-  border-right: 1px solid #2a3f6f;
+  border-right: 1px solid var(--mahindra-red-dark);
   white-space: nowrap;
   z-index: 1;
 }
@@ -270,25 +270,25 @@
 }
 
 .modal-station-table tbody tr:nth-child(even) {
-  background-color: #edf2f7;
+  background-color: var(--bg-light);
 }
 
 .modal-station-table tbody tr:nth-child(odd) {
-  background-color: #f7fafc;
+  background-color: #ffffff;
 }
 
 .modal-st-id {
   font-family: 'Courier New', monospace;
-  color: #2b6cb0;
+  color: var(--mahindra-red);
   padding: 3px 4px 3px 8px;
-  border-right: 1px solid #e2e8f0;
+  border-right: 1px solid var(--border-color);
   white-space: nowrap;
   font-weight: 600;
 }
 
 .modal-st-cell {
   padding: 2px 3px;
-  border-right: 1px solid #e2e8f0;
+  border-right: 1px solid var(--border-color);
 }
 
 .modal-st-cell:last-child {
@@ -298,10 +298,10 @@
 .modal-st-input {
   width: 100%;
   padding: 3px 5px;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--border-color);
   border-radius: 3px;
   font-size: 11px;
-  color: #1a202c;
+  color: var(--text-dark);
   outline: none;
   background: #ffffff;
   box-sizing: border-box;
@@ -310,7 +310,6 @@
 }
 
 .modal-st-input:focus {
-  border-color: #4299e1;
-  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.12);
+  border-color: var(--mahindra-red);
+  box-shadow: 0 0 0 2px rgba(220, 20, 60, 0.12);
 }
-
