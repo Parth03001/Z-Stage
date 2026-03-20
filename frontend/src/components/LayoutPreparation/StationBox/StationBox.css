@@ -79,7 +79,6 @@
 /* Grid */
 .station-box-body {
   overflow-x: auto;
-  flex: 1;
   overflow-y: hidden;
 }
 
