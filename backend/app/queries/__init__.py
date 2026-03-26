@@ -180,3 +180,84 @@ class SnapshotQueries:
     DELETE_CONNECTIONS = "DELETE FROM box_connections WHERE layout_id = :layout_id"
     DELETE_BYPASS_ICONS = "DELETE FROM bypass_icons WHERE layout_id = :layout_id"
     DELETE_STATION_BOXES = "DELETE FROM station_boxes WHERE layout_id = :layout_id"
+
+
+# ── Input record queries ───────────────────────────────────────────────────────
+
+class InputRecordQueries:
+    LIST_ALL = """
+        SELECT id, sr_no, concern_id, concern, type, root_cause, action_plan,
+               target_date, closure_date, ryg, attri, comm, line, stage_no,
+               z_e, attribution, part, phenomena, total_incidences,
+               monthly_data, field_defect_after_cutoff, status_3m,
+               created_at, updated_at
+        FROM input_records
+        ORDER BY sr_no, id
+    """
+
+    GET_BY_ID = """
+        SELECT id, sr_no, concern_id, concern, type, root_cause, action_plan,
+               target_date, closure_date, ryg, attri, comm, line, stage_no,
+               z_e, attribution, part, phenomena, total_incidences,
+               monthly_data, field_defect_after_cutoff, status_3m,
+               created_at, updated_at
+        FROM input_records
+        WHERE id = :record_id
+    """
+
+    CREATE = """
+        INSERT INTO input_records (
+            sr_no, concern_id, concern, type, root_cause, action_plan,
+            target_date, closure_date, ryg, attri, comm, line, stage_no,
+            z_e, attribution, part, phenomena, total_incidences,
+            monthly_data, field_defect_after_cutoff, status_3m,
+            created_at, updated_at
+        ) VALUES (
+            :sr_no, :concern_id, :concern, :type, :root_cause, :action_plan,
+            :target_date, :closure_date, :ryg, :attri, :comm, :line, :stage_no,
+            :z_e, :attribution, :part, :phenomena, :total_incidences,
+            :monthly_data, :field_defect_after_cutoff, :status_3m,
+            NOW(), NOW()
+        )
+        RETURNING id, sr_no, concern_id, concern, type, root_cause, action_plan,
+                  target_date, closure_date, ryg, attri, comm, line, stage_no,
+                  z_e, attribution, part, phenomena, total_incidences,
+                  monthly_data, field_defect_after_cutoff, status_3m,
+                  created_at, updated_at
+    """
+
+    UPDATE = """
+        UPDATE input_records SET
+            sr_no                    = COALESCE(:sr_no, sr_no),
+            concern_id               = COALESCE(:concern_id, concern_id),
+            concern                  = COALESCE(:concern, concern),
+            type                     = COALESCE(:type, type),
+            root_cause               = COALESCE(:root_cause, root_cause),
+            action_plan              = COALESCE(:action_plan, action_plan),
+            target_date              = COALESCE(:target_date, target_date),
+            closure_date             = COALESCE(:closure_date, closure_date),
+            ryg                      = COALESCE(:ryg, ryg),
+            attri                    = COALESCE(:attri, attri),
+            comm                     = COALESCE(:comm, comm),
+            line                     = COALESCE(:line, line),
+            stage_no                 = COALESCE(:stage_no, stage_no),
+            z_e                      = COALESCE(:z_e, z_e),
+            attribution              = COALESCE(:attribution, attribution),
+            part                     = COALESCE(:part, part),
+            phenomena                = COALESCE(:phenomena, phenomena),
+            total_incidences         = COALESCE(:total_incidences, total_incidences),
+            monthly_data             = COALESCE(:monthly_data, monthly_data),
+            field_defect_after_cutoff = COALESCE(:field_defect_after_cutoff, field_defect_after_cutoff),
+            status_3m                = COALESCE(:status_3m, status_3m),
+            updated_at               = NOW()
+        WHERE id = :record_id
+        RETURNING id, sr_no, concern_id, concern, type, root_cause, action_plan,
+                  target_date, closure_date, ryg, attri, comm, line, stage_no,
+                  z_e, attribution, part, phenomena, total_incidences,
+                  monthly_data, field_defect_after_cutoff, status_3m,
+                  created_at, updated_at
+    """
+
+    DELETE_ALL = "DELETE FROM input_records"
+
+    CHECK_EXISTS = "SELECT id FROM input_records WHERE id = :record_id"

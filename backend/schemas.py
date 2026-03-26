@@ -139,3 +139,63 @@ class LayoutSnapshotCreate(BaseModel):
     boxes: List[SnapshotBox] = []
     bypass_icons: List[SnapshotBypassIcon] = []
     connections: List[SnapshotConnection] = []
+
+
+# ── InputRecord ───────────────────────────────────────────────────────────────
+
+class InputRecordOut(BaseModel):
+    id: int
+    sr_no: Optional[int] = None
+    concern_id: Optional[str] = None
+    concern: Optional[str] = None
+    type: Optional[str] = None
+    root_cause: Optional[str] = None
+    action_plan: Optional[str] = None
+    target_date: Optional[str] = None
+    closure_date: Optional[str] = None
+    ryg: Optional[str] = None
+    attri: Optional[str] = None
+    comm: Optional[str] = None
+    line: Optional[str] = None
+    stage_no: Optional[str] = None
+    z_e: Optional[str] = None
+    attribution: Optional[str] = None
+    part: Optional[str] = None
+    phenomena: Optional[str] = None
+    total_incidences: Optional[int] = None
+    monthly_data: Optional[str] = None
+    field_defect_after_cutoff: Optional[int] = None
+    status_3m: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class InputRecordUpdate(BaseModel):
+    sr_no: Optional[int] = None
+    concern_id: Optional[str] = None
+    concern: Optional[str] = None
+    type: Optional[str] = None
+    root_cause: Optional[str] = None
+    action_plan: Optional[str] = None
+    target_date: Optional[str] = None
+    closure_date: Optional[str] = None
+    ryg: Optional[str] = None
+    attri: Optional[str] = None
+    comm: Optional[str] = None
+    line: Optional[str] = None
+    stage_no: Optional[str] = None
+    z_e: Optional[str] = None
+    attribution: Optional[str] = None
+    part: Optional[str] = None
+    phenomena: Optional[str] = None
+    total_incidences: Optional[int] = None
+    monthly_data: Optional[str] = None
+    field_defect_after_cutoff: Optional[int] = None
+    status_3m: Optional[str] = None
+
+
+class UploadResponse(BaseModel):
+    message: str
+    rows_imported: int

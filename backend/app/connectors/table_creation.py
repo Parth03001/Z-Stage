@@ -217,4 +217,57 @@ create_dynamic_table(
 )
 
 
+input_record_id_seq = Sequence("input_record_id_seq")
+
+create_dynamic_table(
+    "input_records",
+    [
+        Column(
+            "id",
+            Integer,
+            input_record_id_seq,
+            primary_key=True,
+            server_default=input_record_id_seq.next_value(),
+        ),
+        Column("sr_no", Integer, nullable=True),
+        Column("concern_id", String(255), nullable=True),
+        Column("concern", String, nullable=True),
+        Column("type", String(50), nullable=True),
+        Column("root_cause", String, nullable=True),
+        Column("action_plan", String, nullable=True),
+        Column("target_date", String(50), nullable=True),
+        Column("closure_date", String(50), nullable=True),
+        Column("ryg", String(10), nullable=True),
+        Column("attri", String(255), nullable=True),
+        Column("comm", String, nullable=True),
+        Column("line", String(255), nullable=True),
+        Column("stage_no", String(50), nullable=True),
+        Column("z_e", String(10), nullable=True),
+        Column("attribution", String(10), nullable=True),
+        Column("part", String(255), nullable=True),
+        Column("phenomena", String(255), nullable=True),
+        Column("total_incidences", Integer, nullable=True),
+        Column("monthly_data", String, nullable=True),
+        Column("field_defect_after_cutoff", Integer, nullable=True),
+        Column("status_3m", String(10), nullable=True),
+        Column(
+            "created_at",
+            DateTime,
+            default=datetime.datetime.utcnow,
+            nullable=False,
+        ),
+        Column(
+            "updated_at",
+            DateTime,
+            default=datetime.datetime.utcnow,
+            onupdate=datetime.datetime.utcnow,
+            nullable=False,
+        ),
+    ],
+    indexes=[
+        Index("idx_input_records_stage_no", "stage_no"),
+    ],
+)
+
+
 logger.info("All Z-Stage table definitions registered")

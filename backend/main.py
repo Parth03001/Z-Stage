@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config.config import get_settings
 from app.connectors.state_db_manager import StateDBManager
-from routers import layouts, station_boxes, bypass_icons, connections
+from routers import layouts, station_boxes, bypass_icons, connections, input_records
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,6 +37,7 @@ app.include_router(layouts.router)
 app.include_router(station_boxes.router)
 app.include_router(bypass_icons.router)
 app.include_router(connections.router)
+app.include_router(input_records.router)
 
 
 @app.get("/health", tags=["health"])

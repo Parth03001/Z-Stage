@@ -31,3 +31,15 @@ export const bypassIconApi = {
   updateBypassIcon: (iconId, data) => api.put(`/bypass-icons/${iconId}`, data),
   deleteBypassIcon: (iconId) => api.delete(`/bypass-icons/${iconId}`),
 };
+
+export const inputApi = {
+  uploadExcel: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return axios.post(`${BASE_URL}/input/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  getRecords: () => api.get('/input/records'),
+  updateRecord: (id, data) => api.put(`/input/records/${id}`, data),
+};
