@@ -241,6 +241,149 @@
   cursor: not-allowed;
 }
 
+.add-month-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border: 1px solid #3182ce;
+  border-radius: 5px;
+  background: #ebf8ff;
+  color: #2b6cb0;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.add-month-btn:hover {
+  background: #bee3f8;
+}
+
+/* ── Add Month Modal ──────────────────────────────────────────────────────── */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.add-month-modal {
+  background: #fff;
+  border-radius: 10px;
+  width: 300px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #a0aec0;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.modal-close:hover {
+  color: #4a5568;
+}
+
+.modal-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 5px;
+}
+
+.modal-select,
+.modal-input {
+  padding: 7px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  font-size: 13px;
+  color: #2d3748;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-select:focus,
+.modal-input:focus {
+  border-color: #3182ce;
+  box-shadow: 0 0 0 2px #bee3f8;
+}
+
+.modal-error {
+  font-size: 12px;
+  color: #c53030;
+  margin: 8px 0 0 0;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.modal-cancel {
+  padding: 7px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  background: #fff;
+  color: #4a5568;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.modal-cancel:hover {
+  background: #edf2f7;
+}
+
+.modal-confirm {
+  padding: 7px 16px;
+  border: none;
+  border-radius: 5px;
+  background: #3182ce;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.modal-confirm:hover {
+  background: #2b6cb0;
+}
+
 .master-loading,
 .master-empty,
 .master-error {

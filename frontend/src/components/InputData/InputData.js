@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Upload, Database, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { Upload, Database, CheckCircle, AlertCircle, Loader, Plus, X } from 'lucide-react';
 import { inputApi } from '../../api/layoutApi';
 import './InputData.css';
 
@@ -200,15 +200,70 @@ function MonthlyCell({ recordId, monthKey, monthlyData, onSaved }) {
   );
 }
 
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const LS_KEY = 'zstage_extra_months';
+
+function AddMonthModal({ existingMonths, onAdd, onClose }) {
+  const [month, setMonth] = useState(String(new Date().getMonth() + 1).padStart(2, '0'));
+  const [year, setYear] = useState(String(new Date().getFullYear()));
+  const [error, setError] = useState('');
+
+  const handleAdd = () => {
+    const yr = parseInt(year, 10);
+    if (!yr || yr < 2000 || yr > 2100) { setError('Enter a valid year (2000–2100).'); return; }
+    const key = `${yr}-${month}`;
+    if (existingMonths.includes(key)) { setError(`${formatMonthLabel(key)} already exists.`); return; }
+    onAdd(key);
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="add-month-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <span className="modal-title">Add New Month</span>
+          <button className="modal-close" onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="modal-body">
+          <label className="modal-label">Month</label>
+          <select className="modal-select" value={month} onChange={(e) => setMonth(e.target.value)}>
+            {MONTH_NAMES.map((name, i) => (
+              <option key={i} value={String(i + 1).padStart(2, '0')}>{name}</option>
+            ))}
+          </select>
+          <label className="modal-label" style={{ marginTop: 12 }}>Year</label>
+          <input
+            className="modal-input"
+            type="number"
+            value={year}
+            onChange={(e) => { setYear(e.target.value); setError(''); }}
+            min="2000"
+            max="2100"
+          />
+          {error && <p className="modal-error">{error}</p>}
+        </div>
+        <div className="modal-footer">
+          <button className="modal-cancel" onClick={onClose}>Cancel</button>
+          <button className="modal-confirm" onClick={handleAdd}>Add Column</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function InputData() {
   const [activeTab, setActiveTab] = useState('upload');
   const [dragging, setDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState(null); // { success, message, rowsImported }
+  const [uploadResult, setUploadResult] = useState(null);
   const [records, setRecords] = useState([]);
   const [loadingRecords, setLoadingRecords] = useState(false);
   const [loadError, setLoadError] = useState(null);
+  const [extraMonths, setExtraMonths] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; }
+  });
+  const [showAddMonth, setShowAddMonth] = useState(false);
   const fileInputRef = useRef(null);
 
   const loadRecords = useCallback(async () => {
@@ -231,6 +286,24 @@ export default function InputData() {
   const handleRecordSaved = useCallback((recordId, updatedRecord) => {
     setRecords((prev) => prev.map((r) => (r.id === recordId ? updatedRecord : r)));
   }, []);
+
+  // Derive full sorted month list: base + keys present in data + user-added extras
+  const allMonths = React.useMemo(() => {
+    const set = new Set(MONTHLY_KEYS);
+    records.forEach((rec) => {
+      if (rec.monthly_data) {
+        try { Object.keys(JSON.parse(rec.monthly_data)).forEach((k) => set.add(k)); } catch {}
+      }
+    });
+    extraMonths.forEach((k) => set.add(k));
+    return Array.from(set).sort();
+  }, [records, extraMonths]);
+
+  const handleAddMonth = (key) => {
+    const updated = [...extraMonths, key];
+    setExtraMonths(updated);
+    localStorage.setItem(LS_KEY, JSON.stringify(updated));
+  };
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -348,11 +421,22 @@ export default function InputData() {
             <h2 className="panel-title">Master Data</h2>
             <div className="master-actions">
               <span className="record-count">{records.length} record{records.length !== 1 ? 's' : ''}</span>
+              <button className="add-month-btn" onClick={() => setShowAddMonth(true)}>
+                <Plus size={13} /> Add New Month
+              </button>
               <button className="refresh-btn" onClick={loadRecords} disabled={loadingRecords}>
                 {loadingRecords ? <Loader size={13} className="spin" /> : '↻'} Refresh
               </button>
             </div>
           </div>
+
+          {showAddMonth && (
+            <AddMonthModal
+              existingMonths={allMonths}
+              onAdd={handleAddMonth}
+              onClose={() => setShowAddMonth(false)}
+            />
+          )}
 
           {loadingRecords && (
             <div className="master-loading">
@@ -384,7 +468,7 @@ export default function InputData() {
                     {FIXED_COLUMNS.map((col) => (
                       <th key={col.key} style={{ minWidth: col.width }}>{col.label}</th>
                     ))}
-                    {MONTHLY_KEYS.map((key) => (
+                    {allMonths.map((key) => (
                       <th key={key} className="month-header">{formatMonthLabel(key)}</th>
                     ))}
                     {TRAILING_COLUMNS.map((col) => (
@@ -416,7 +500,7 @@ export default function InputData() {
                           />
                         )
                       ))}
-                      {MONTHLY_KEYS.map((key) => (
+                      {allMonths.map((key) => (
                         <MonthlyCell
                           key={key}
                           recordId={rec.id}
