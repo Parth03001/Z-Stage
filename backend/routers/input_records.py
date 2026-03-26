@@ -1,6 +1,7 @@
 import io
 import json
 import logging
+import re
 from typing import List
 
 import openpyxl
@@ -29,6 +30,15 @@ def _row_to_dict(row) -> dict:
     return dict(row._mapping)
 
 
+def _clean_text(s: str) -> str:
+    """Remove characters that cannot be stored in WIN1252 (e.g. zero-width spaces)."""
+    # Strip zero-width and other invisible unicode characters
+    s = re.sub(r'[\u200b\u200c\u200d\u200e\u200f\ufeff\u00ad]', '', s)
+    # Replace any remaining character not representable in WIN1252 with a space
+    s = s.encode('cp1252', errors='replace').decode('cp1252')
+    return s
+
+
 def _safe_str(value) -> str | None:
     if value is None:
         return None
@@ -36,6 +46,7 @@ def _safe_str(value) -> str | None:
     # Ignore Excel formula strings
     if s.startswith("="):
         return None
+    s = _clean_text(s)
     return s or None
 
 
