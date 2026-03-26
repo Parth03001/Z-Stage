@@ -152,7 +152,11 @@ function MonthlyCell({ recordId, monthKey, monthlyData, onSaved }) {
       } else {
         newParsed[monthKey] = newVal;
       }
-      const res = await inputApi.updateRecord(recordId, { monthly_data: JSON.stringify(newParsed) });
+      const newTotal = Object.values(newParsed).reduce((sum, v) => sum + v, 0);
+      const res = await inputApi.updateRecord(recordId, {
+        monthly_data: JSON.stringify(newParsed),
+        total_incidences: newTotal,
+      });
       onSaved(recordId, res.data);
     } catch (err) {
       console.error('Save failed', err);
