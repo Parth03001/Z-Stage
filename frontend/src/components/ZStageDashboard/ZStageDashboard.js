@@ -344,14 +344,25 @@ function parseLayout(apiLayout) {
 }
 
 // ── Compute display data for one station ──────────────────────────────────────
-// Z/E: 'E' wins over 'Z'; only shown when total_incidences > 0
-// Attrs P/M/D/U: 'X/Y' — X active (total_incidences>0), Y total; omit if Y=0
+// ze:       'Z' | 'E' | null   — symbol to show (E has priority)
+// zeStatus: 'red' | 'green'    — red = has active incidences, green = stage exists but clean
+// Attrs P/M/D/U: 'X/Y' — X active (total_incidences>0), Y=sum of total_incidences; omit if Y=0
 function computeStationData(records, stationId) {
   const sr = records.filter((r) => r.stage_no === stationId);
 
-  const hasE = sr.some((r) => r.z_e === 'E' && (r.total_incidences || 0) > 0);
-  const hasZ = sr.some((r) => r.z_e === 'Z' && (r.total_incidences || 0) > 0);
-  const ze = hasE ? 'E' : hasZ ? 'Z' : null;
+  const eRecs = sr.filter((r) => r.z_e === 'E');
+  const zRecs = sr.filter((r) => r.z_e === 'Z');
+
+  let ze = null;
+  let zeStatus = null; // 'red' | 'green'
+
+  if (eRecs.length > 0) {
+    ze = 'E';
+    zeStatus = eRecs.some((r) => (r.total_incidences || 0) > 0) ? 'red' : 'green';
+  } else if (zRecs.length > 0) {
+    ze = 'Z';
+    zeStatus = zRecs.some((r) => (r.total_incidences || 0) > 0) ? 'red' : 'green';
+  }
 
   const attrs = {};
   for (const attr of ['P', 'M', 'D', 'U']) {
@@ -364,7 +375,7 @@ function computeStationData(records, stationId) {
     attrs[attr] = `${X}/${Y}`;
   }
 
-  return { ze, attrs };
+  return { ze, zeStatus, attrs };
 }
 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
@@ -470,10 +481,10 @@ function ZStageDashboard() {
           </div>
           <div className="dash-toolbar-right">
             <div className="dash-legend">
-              <span className="dash-legend-chip dash-legend-chip--z">Z</span>
-              <span className="dash-legend-text">Zone Z</span>
-              <span className="dash-legend-chip dash-legend-chip--e">E</span>
-              <span className="dash-legend-text">Zone E (priority)</span>
+              <span className="dash-legend-chip dash-legend-chip--red">Z</span>
+              <span className="dash-legend-text">Active issues</span>
+              <span className="dash-legend-chip dash-legend-chip--green">Z</span>
+              <span className="dash-legend-text">No issues (clean)</span>
               <span className="dash-legend-sep" />
               <span className="dash-legend-text dash-legend-hint">X/Y = active / total incidences · Click station header to view records</span>
             </div>
@@ -584,12 +595,12 @@ function ZStageDashboard() {
                                   {/* Z / E row */}
                                   <tr>
                                     {box.stationIds.map((sid) => {
-                                      const ze = stationData[sid].ze;
+                                      const { ze, zeStatus } = stationData[sid];
                                       return (
                                         <td
                                           key={sid}
                                           colSpan={2}
-                                          className={`dash-grid-ze${ze ? ` dash-ze--${ze.toLowerCase()}` : ''}`}
+                                          className={`dash-grid-ze${zeStatus ? ` dash-ze--${zeStatus}` : ''}`}
                                         >
                                           {ze || ''}
                                         </td>
