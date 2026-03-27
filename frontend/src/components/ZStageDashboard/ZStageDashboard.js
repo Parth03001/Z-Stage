@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Xarrow, { Xwrapper } from 'react-xarrows';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
-import { ZoomIn, ZoomOut, Maximize2, RefreshCw, GitBranch } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, RefreshCw, GitBranch, X, Loader } from 'lucide-react';
 import { layoutApi, inputApi } from '../../api/layoutApi';
 import './ZStageDashboard.css';
 
@@ -10,6 +10,269 @@ const GRID = 40;
 const CANVAS_SIZE = 5000;
 
 const boxWidth = (stationCount) => Math.max(5, stationCount) * GRID;
+
+// ── Column definitions (mirror InputData) ─────────────────────────────────────
+const MONTHLY_KEYS = [
+  '2024-01','2024-02','2024-03','2024-04','2024-05','2024-06',
+  '2024-07','2024-08','2024-09','2024-10','2024-11','2024-12',
+  '2025-01','2025-02','2025-03','2025-04','2025-05','2025-06',
+  '2025-07','2025-08','2025-09','2025-10','2025-11','2025-12',
+  '2026-01','2026-02','2026-03',
+];
+
+const FIXED_COLS = [
+  { key: 'sr_no',           label: 'Sr.No',          width: 60,  type: 'number' },
+  { key: 'concern_id',      label: 'Concern ID',      width: 130, type: 'text'   },
+  { key: 'concern',         label: 'Concern',         width: 260, type: 'text'   },
+  { key: 'type',            label: 'Type',            width: 70,  type: 'text'   },
+  { key: 'root_cause',      label: 'Root Cause',      width: 220, type: 'text'   },
+  { key: 'action_plan',     label: 'Action Plan',     width: 220, type: 'text'   },
+  { key: 'target_date',     label: 'Target Date',     width: 110, type: 'text'   },
+  { key: 'closure_date',    label: 'Closure Date',    width: 110, type: 'text'   },
+  { key: 'ryg',             label: 'RYG',             width: 60,  type: 'text'   },
+  { key: 'attri',           label: 'Attri.',          width: 90,  type: 'text'   },
+  { key: 'comm',            label: 'Comm',            width: 160, type: 'text'   },
+  { key: 'line',            label: 'Line',            width: 120, type: 'text'   },
+  { key: 'stage_no',        label: 'Stage No',        width: 90,  type: 'text'   },
+  { key: 'z_e',             label: 'Z/E',             width: 55,  type: 'text'   },
+  { key: 'attribution',     label: 'Attribution',     width: 90,  type: 'text'   },
+  { key: 'part',            label: 'Part',            width: 160, type: 'text'   },
+  { key: 'phenomena',       label: 'Phenomena',       width: 160, type: 'text'   },
+  { key: 'total_incidences', label: 'Total',          width: 70,  type: 'number' },
+];
+
+const TRAILING_COLS = [
+  { key: 'field_defect_after_cutoff', label: 'Field Defect After Cut-off', width: 130, type: 'number' },
+  { key: 'status_3m',                 label: 'Status (3M)',                 width: 90,  type: 'text'   },
+];
+
+const LONG_TEXT = new Set(['concern', 'root_cause', 'action_plan', 'comm']);
+
+function fmtMonth(key) {
+  const [year, month] = key.split('-');
+  return new Date(Number(year), Number(month) - 1, 1)
+    .toLocaleString('default', { month: 'short' }) + ' ' + year.slice(2);
+}
+
+// ── Inline editable cell ───────────────────────────────────────────────────────
+function EditableCell({ recordId, fieldKey, value, type, onSaved }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft]     = useState(value ?? '');
+  const [saving, setSaving]   = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => { setDraft(value ?? ''); }, [value]);
+  useEffect(() => { if (editing && inputRef.current) inputRef.current.focus(); }, [editing]);
+
+  const commit = useCallback(async () => {
+    setEditing(false);
+    const trimmed  = draft.trim();
+    const original = String(value ?? '');
+    if (trimmed === original) return;
+    setSaving(true);
+    try {
+      const payload = {
+        [fieldKey]: type === 'number'
+          ? (trimmed === '' ? null : Number(trimmed))
+          : (trimmed || null),
+      };
+      const res = await inputApi.updateRecord(recordId, payload);
+      onSaved(recordId, res.data);
+    } catch {
+      setDraft(value ?? '');
+    } finally {
+      setSaving(false);
+    }
+  }, [draft, value, fieldKey, type, recordId, onSaved]);
+
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter')  commit();
+    if (e.key === 'Escape') { setDraft(value ?? ''); setEditing(false); }
+  };
+
+  if (saving) return <td className="sdm-cell-saving"><Loader size={12} className="sdm-spin" /></td>;
+
+  if (editing) {
+    return (
+      <td className="sdm-cell-editing">
+        {LONG_TEXT.has(fieldKey) ? (
+          <textarea
+            ref={inputRef} value={draft} rows={3}
+            className="sdm-cell-textarea"
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => { if (e.key === 'Escape') { setDraft(value ?? ''); setEditing(false); } }}
+          />
+        ) : (
+          <input
+            ref={inputRef} value={draft}
+            type={type === 'number' ? 'number' : 'text'}
+            className="sdm-cell-input"
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={onKeyDown}
+          />
+        )}
+      </td>
+    );
+  }
+
+  const display = value ?? '';
+  return (
+    <td className="sdm-cell-view" onClick={() => setEditing(true)} title="Click to edit">
+      {display === '' || display === null
+        ? <span className="sdm-cell-empty">—</span>
+        : <span>{String(display)}</span>}
+    </td>
+  );
+}
+
+// ── Inline editable monthly cell ──────────────────────────────────────────────
+function MonthlyCell({ recordId, monthKey, monthlyData, onSaved }) {
+  const parsed = React.useMemo(() => {
+    try { return JSON.parse(monthlyData || '{}'); } catch { return {}; }
+  }, [monthlyData]);
+  const value = parsed[monthKey] ?? null;
+
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft]     = useState(value !== null ? String(value) : '');
+  const [saving, setSaving]   = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => { setDraft(value !== null ? String(value) : ''); }, [value]);
+  useEffect(() => { if (editing && inputRef.current) inputRef.current.focus(); }, [editing]);
+
+  const commit = useCallback(async () => {
+    setEditing(false);
+    const newVal = draft.trim() === '' ? null : Number(draft.trim());
+    if (newVal === value) return;
+    setSaving(true);
+    try {
+      const newParsed = { ...parsed };
+      if (newVal === null) { delete newParsed[monthKey]; } else { newParsed[monthKey] = newVal; }
+      const newTotal = Object.values(newParsed).reduce((s, v) => s + v, 0);
+      const res = await inputApi.updateRecord(recordId, {
+        monthly_data: JSON.stringify(newParsed),
+        total_incidences: newTotal,
+      });
+      onSaved(recordId, res.data);
+    } catch {
+      setDraft(value !== null ? String(value) : '');
+    } finally {
+      setSaving(false);
+    }
+  }, [draft, value, parsed, monthKey, recordId, onSaved]);
+
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter')  commit();
+    if (e.key === 'Escape') { setDraft(value !== null ? String(value) : ''); setEditing(false); }
+  };
+
+  if (saving) return <td className="sdm-cell-saving sdm-monthly"><Loader size={12} className="sdm-spin" /></td>;
+
+  if (editing) {
+    return (
+      <td className="sdm-cell-editing sdm-monthly">
+        <input ref={inputRef} type="number" value={draft}
+          className="sdm-cell-input"
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit} onKeyDown={onKeyDown}
+        />
+      </td>
+    );
+  }
+
+  return (
+    <td
+      className={`sdm-cell-view sdm-monthly${value !== null ? ' sdm-monthly--has' : ''}`}
+      onClick={() => setEditing(true)} title="Click to edit"
+    >
+      {value !== null ? value : ''}
+    </td>
+  );
+}
+
+// ── Station Detail Modal ───────────────────────────────────────────────────────
+function StationDetailModal({ stationId, records, allMonths, onSaved, onClose }) {
+  const filtered = records.filter((r) => r.stage_no === stationId);
+
+  return (
+    <div className="sdm-overlay" onClick={onClose}>
+      <div className="sdm-modal" onClick={(e) => e.stopPropagation()}>
+
+        {/* Header */}
+        <div className="sdm-header">
+          <div className="sdm-header-left">
+            <span className="sdm-title">Station: {stationId}</span>
+            <span className="sdm-count">{filtered.length} record{filtered.length !== 1 ? 's' : ''}</span>
+          </div>
+          <button className="sdm-close" onClick={onClose} title="Close"><X size={16} /></button>
+        </div>
+
+        {/* Table */}
+        <div className="sdm-body">
+          {filtered.length === 0 ? (
+            <div className="sdm-empty">No input records found for station <strong>{stationId}</strong>.</div>
+          ) : (
+            <div className="sdm-table-wrap">
+              <table className="sdm-table">
+                <thead>
+                  <tr>
+                    {FIXED_COLS.map((col) => (
+                      <th key={col.key} style={{ minWidth: col.width }}>{col.label}</th>
+                    ))}
+                    {allMonths.map((key) => (
+                      <th key={key} className="sdm-month-th">{fmtMonth(key)}</th>
+                    ))}
+                    {TRAILING_COLS.map((col) => (
+                      <th key={col.key} style={{ minWidth: col.width }}>{col.label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((rec) => (
+                    <tr key={rec.id}>
+                      {FIXED_COLS.map((col) => (
+                        <EditableCell
+                          key={col.key}
+                          recordId={rec.id}
+                          fieldKey={col.key}
+                          value={rec[col.key]}
+                          type={col.type}
+                          onSaved={onSaved}
+                        />
+                      ))}
+                      {allMonths.map((key) => (
+                        <MonthlyCell
+                          key={key}
+                          recordId={rec.id}
+                          monthKey={key}
+                          monthlyData={rec.monthly_data}
+                          onSaved={onSaved}
+                        />
+                      ))}
+                      {TRAILING_COLS.map((col) => (
+                        <EditableCell
+                          key={col.key}
+                          recordId={rec.id}
+                          fieldKey={col.key}
+                          value={rec[col.key]}
+                          type={col.type}
+                          onSaved={onSaved}
+                        />
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}
 
 // ── Parse API layout into flat state ─────────────────────────────────────────
 function parseLayout(apiLayout) {
@@ -36,14 +299,9 @@ function parseLayout(apiLayout) {
   return { boxes, bypassIcons, connections };
 }
 
-// ── Compute display data for one station from input records ───────────────────
-// Returns { ze: 'Z'|'E'|null, attrs: { P: '2/4', M: '1/3', ... } }
-// Rules:
-//   Z/E  — show 'E' if any record has z_e='E' & total_incidences>0;
-//           else 'Z' if any has z_e='Z' & total_incidences>0; else null
-//   Attrs — for each of P,M,D,U: show 'X/Y' where Y=total records with that
-//           attribution for this station, X=those with total_incidences>0.
-//           Skip entirely if Y=0 (don't show 0/0).
+// ── Compute display data for one station ──────────────────────────────────────
+// Z/E: 'E' wins over 'Z'; only shown when total_incidences > 0
+// Attrs P/M/D/U: 'X/Y' — X active (total_incidences>0), Y total; omit if Y=0
 function computeStationData(records, stationId) {
   const sr = records.filter((r) => r.stage_no === stationId);
 
@@ -65,15 +323,29 @@ function computeStationData(records, stationId) {
 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 function ZStageDashboard() {
-  const [layouts, setLayouts] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
-  const [boxes, setBoxes] = useState([]);
+  const [layouts, setLayouts]         = useState([]);
+  const [selectedId, setSelectedId]   = useState(null);
+  const [boxes, setBoxes]             = useState([]);
   const [bypassIcons, setBypassIcons] = useState([]);
   const [connections, setConnections] = useState([]);
-  const [records, setRecords] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [records, setRecords]         = useState([]);
+  const [loading, setLoading]         = useState(false);
+  const [error, setError]             = useState(null);
   const [transformState, setTransformState] = useState({ scale: 1, positionX: 0, positionY: 0 });
+
+  // Station detail popup
+  const [popupStation, setPopupStation] = useState(null); // stationId string | null
+
+  // Derive all months present in loaded records (same logic as InputData)
+  const allMonths = React.useMemo(() => {
+    const set = new Set(MONTHLY_KEYS);
+    records.forEach((rec) => {
+      if (rec.monthly_data) {
+        try { Object.keys(JSON.parse(rec.monthly_data)).forEach((k) => set.add(k)); } catch {}
+      }
+    });
+    return Array.from(set).sort();
+  }, [records]);
 
   // Load layout list + input records on mount
   useEffect(() => {
@@ -119,6 +391,11 @@ function ZStageDashboard() {
     }
   };
 
+  // When a record is saved in the popup, update records state so dashboard re-renders
+  const handleRecordSaved = useCallback((recordId, updatedRecord) => {
+    setRecords((prev) => prev.map((r) => (r.id === recordId ? updatedRecord : r)));
+  }, []);
+
   return (
     // Xwrapper must wrap everything so Xarrow SVGs render in screen space
     <Xwrapper>
@@ -149,7 +426,7 @@ function ZStageDashboard() {
               <span className="dash-legend-chip dash-legend-chip--e">E</span>
               <span className="dash-legend-text">Zone E (priority)</span>
               <span className="dash-legend-sep" />
-              <span className="dash-legend-text dash-legend-hint">X/Y = active / total incidences per attribution</span>
+              <span className="dash-legend-text dash-legend-hint">X/Y = active / total incidences · Click station header to view records</span>
             </div>
             <button className="dash-refresh-btn" onClick={handleRefresh} title="Refresh data">
               <RefreshCw size={13} />
@@ -241,7 +518,15 @@ function ZStageDashboard() {
                                 <thead>
                                   <tr>
                                     {box.stationIds.map((sid) => (
-                                      <th key={sid} colSpan={2} className="dash-grid-th">{sid}</th>
+                                      <th
+                                        key={sid}
+                                        colSpan={2}
+                                        className="dash-grid-th dash-grid-th--clickable"
+                                        title={`Click to view records for ${sid}`}
+                                        onClick={() => setPopupStation(sid)}
+                                      >
+                                        {sid}
+                                      </th>
                                     ))}
                                   </tr>
                                 </thead>
@@ -315,6 +600,17 @@ function ZStageDashboard() {
           zIndex={100}
         />
       ))}
+
+      {/* Station detail popup — rendered outside canvas so it's not clipped */}
+      {popupStation && (
+        <StationDetailModal
+          stationId={popupStation}
+          records={records}
+          allMonths={allMonths}
+          onSaved={handleRecordSaved}
+          onClose={() => setPopupStation(null)}
+        />
+      )}
     </Xwrapper>
   );
 }
