@@ -656,7 +656,7 @@ function ZStageDashboard() {
           end={conn.toId}
           color="#1a2744"
           strokeWidth={2}
-          path="smooth"
+          path="grid"
           headSize={6}
           zIndex={100}
         />

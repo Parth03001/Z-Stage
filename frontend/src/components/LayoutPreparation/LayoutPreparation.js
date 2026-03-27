@@ -148,20 +148,26 @@ function LayoutPreparation({
     };
 
     const onUp = (e) => {
-      const elements = document.elementsFromPoint(e.clientX, e.clientY);
-      const target = elements.find(
-        (el) =>
-          (el.classList.contains('station-box') ||
-            el.classList.contains('bypass-icon-wrapper')) &&
-          el.id !== dragging.fromId,
-      );
-      if (target?.id) {
+      // Use bounding-rect hit-test so the connection always lands on the box
+      // the cursor is actually inside — not on a nearby/overlapping box.
+      const candidates = document.querySelectorAll('.station-box, .bypass-icon-wrapper');
+      let targetId = null;
+      for (const el of candidates) {
+        if (el.id === dragging.fromId) continue;
+        const r = el.getBoundingClientRect();
+        if (e.clientX >= r.left && e.clientX <= r.right &&
+            e.clientY >= r.top  && e.clientY <= r.bottom) {
+          targetId = el.id;
+          break;
+        }
+      }
+      if (targetId) {
         setConnections((prev) => {
           const dup = prev.some(
-            (c) => c.fromId === dragging.fromId && c.toId === target.id,
+            (c) => c.fromId === dragging.fromId && c.toId === targetId,
           );
           if (dup) return prev;
-          return [...prev, { id: uid(), fromId: dragging.fromId, toId: target.id }];
+          return [...prev, { id: uid(), fromId: dragging.fromId, toId: targetId }];
         });
       }
       setDragging(null);
@@ -506,7 +512,7 @@ function LayoutPreparation({
           end={conn.toId}
           color="#1a2744"
           strokeWidth={2}
-          path="smooth"
+          path="grid"
           headSize={6}
           zIndex={100}
           passProps={{
