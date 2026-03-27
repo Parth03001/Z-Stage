@@ -423,15 +423,15 @@ function ZStageDashboard() {
     if (!el) return;
     const rect = el.getBoundingClientRect();
 
-    const PAD = 60;
+    const PAD = 80;
     const contentW = maxX - minX + PAD * 2;
     const contentH = maxY - minY + PAD * 2;
 
     const scaleByW = rect.width  / contentW;
     const scaleByH = rect.height / contentH;
-    const scale = Math.min(scaleByW, scaleByH, 1) * 0.70;
+    const scale = Math.min(scaleByW, scaleByH, 1) * 0.76;
 
-    const posX = PAD - minX * scale;
+    const posX = (rect.width  - contentW * scale) / 2 - (minX - PAD) * scale;
     const posY = (rect.height - contentH * scale) / 2 - (minY - PAD) * scale;
 
     transformRef.current.setTransform(posX, posY, scale, 300);

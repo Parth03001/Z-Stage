@@ -165,18 +165,16 @@ function LayoutPreparation({
     if (!canvasEl) return;
     const rect = canvasEl.getBoundingClientRect();
 
-    const PAD = 60;
+    const PAD = 80;
     const contentW = maxX - minX + PAD * 2;
     const contentH = maxY - minY + PAD * 2;
 
-    // Use BOTH width and height constraints so a wide/short layout never overflows sideways
     const scaleByW = rect.width  / contentW;
     const scaleByH = rect.height / contentH;
-    const scale = Math.min(scaleByW, scaleByH, 1) * 0.70;
+    const scale = Math.min(scaleByW, scaleByH, 1) * 0.76;
 
-    // Left-align with small padding rather than centering — avoids content being pushed too far right
-    const posX = PAD - minX * scale;
-    // Vertically center
+    // Center both axes
+    const posX = (rect.width  - contentW * scale) / 2 - (minX - PAD) * scale;
     const posY = (rect.height - contentH * scale) / 2 - (minY - PAD) * scale;
 
     transformRef.current.setTransform(posX, posY, scale, 300);
