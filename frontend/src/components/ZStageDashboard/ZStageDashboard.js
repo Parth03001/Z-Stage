@@ -196,6 +196,13 @@ function MonthlyCell({ recordId, monthKey, monthlyData, onSaved }) {
 function StationDetailModal({ stationId, records, allMonths, onSaved, onClose }) {
   const filtered = records.filter((r) => r.stage_no === stationId);
 
+  // Close on Escape key
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
   return (
     <div className="sdm-overlay" onClick={onClose}>
       <div className="sdm-modal" onClick={(e) => e.stopPropagation()}>
@@ -454,6 +461,7 @@ function ZStageDashboard() {
               minScale={0.15}
               maxScale={3}
               wheel={{ step: 0.08 }}
+              panning={{ excluded: ['dash-grid-th--clickable'] }}
               onTransformed={(_, state) =>
                 setTransformState({ scale: state.scale, positionX: state.positionX, positionY: state.positionY })
               }
