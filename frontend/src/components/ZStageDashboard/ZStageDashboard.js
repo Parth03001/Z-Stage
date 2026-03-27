@@ -427,7 +427,7 @@ function ZStageDashboard() {
     const contentW = maxX - minX + PAD * 2;
     const contentH = maxY - minY + PAD * 2;
 
-    const scale = Math.min(rect.width / contentW, rect.height / contentH, 1) * 0.85;
+    const scale = Math.min(rect.width / contentW, rect.height / contentH, 1) * 0.72;
     const posX = (rect.width  - contentW * scale) / 2 - (minX - PAD) * scale;
     const posY = (rect.height - contentH * scale) / 2 - (minY - PAD) * scale;
 

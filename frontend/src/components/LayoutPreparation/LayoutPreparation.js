@@ -173,7 +173,7 @@ function LayoutPreparation({
       rect.width  / contentW,
       rect.height / contentH,
       1, // never zoom in beyond 100%
-    ) * 0.85; // extra breathing room so nothing is clipped
+    ) * 0.72; // extra breathing room so nothing is clipped
 
     const posX = (rect.width  - contentW * scale) / 2 - (minX - PAD) * scale;
     const posY = (rect.height - contentH * scale) / 2 - (minY - PAD) * scale;
