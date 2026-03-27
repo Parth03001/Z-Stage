@@ -340,7 +340,19 @@ function parseLayout(apiLayout) {
     toId:   c.to_box_id   != null ? `db-box-${c.to_box_id}`   : `db-bypass-${c.to_bypass_id}`,
   }));
 
-  return { boxes, bypassIcons, connections };
+  // Normalize negative coordinates — shift everything so min x/y ≥ GRID (40px)
+  const allX = [...boxes.map((b) => b.position.x), ...bypassIcons.map((ic) => ic.position.x)];
+  const allY = [...boxes.map((b) => b.position.y), ...bypassIcons.map((ic) => ic.position.y)];
+  const shiftX = allX.length ? Math.max(0, GRID - Math.min(...allX)) : 0;
+  const shiftY = allY.length ? Math.max(0, GRID - Math.min(...allY)) : 0;
+  const shiftedBoxes = shiftX || shiftY
+    ? boxes.map((b) => ({ ...b, position: { x: b.position.x + shiftX, y: b.position.y + shiftY } }))
+    : boxes;
+  const shiftedBypass = shiftX || shiftY
+    ? bypassIcons.map((ic) => ({ ...ic, position: { x: ic.position.x + shiftX, y: ic.position.y + shiftY } }))
+    : bypassIcons;
+
+  return { boxes: shiftedBoxes, bypassIcons: shiftedBypass, connections };
 }
 
 // ── Compute display data for one station ──────────────────────────────────────
