@@ -1,28 +1,378 @@
+/* ── Dashboard shell ─────────────────────────────────────────────────────── */
 .z-dashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--bg-light);
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+.dash-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+  flex-shrink: 0;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dash-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dash-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.dash-toolbar-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.dash-layout-select {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background-color: #ffffff;
+  font-size: 13px;
+  color: var(--text-dark);
+  cursor: pointer;
+  min-width: 180px;
+}
+
+.dash-layout-select:focus {
+  outline: none;
+  border-color: var(--mahindra-red);
+}
+
+/* Legend */
+.dash-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-gray);
+}
+
+.dash-legend-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 18px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.dash-legend-chip--z {
+  background-color: #bee3f8;
+  color: #2b6cb0;
+}
+
+.dash-legend-chip--e {
+  background-color: #fed7d7;
+  color: #c53030;
+}
+
+.dash-legend-text {
+  font-size: 12px;
+  color: var(--text-gray);
+}
+
+.dash-legend-hint {
+  font-style: italic;
+}
+
+.dash-legend-sep {
+  width: 1px;
+  height: 14px;
+  background-color: var(--border-color);
+  margin: 0 4px;
+}
+
+/* Refresh button */
+.dash-refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background-color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.dash-refresh-btn:hover {
+  background-color: var(--bg-light);
+}
+
+/* ── Canvas (same grid background as layout-canvas) ─────────────────────── */
+.dash-canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background-color: #ececec;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.5) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.dash-virtual-canvas {
+  position: relative;
+}
+
+/* Overlay messages (loading / error) */
+.dash-overlay-msg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 14px 24px;
+  font-size: 14px;
+  color: var(--text-dark);
+  box-shadow: var(--card-shadow);
+  z-index: 200;
+}
+
+.dash-overlay-msg--error {
+  color: #c53030;
+  border-color: #fed7d7;
+}
+
+/* Empty state */
+.dash-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: var(--text-gray);
+  pointer-events: none;
+}
+
+.dash-empty p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.dash-empty strong {
+  color: var(--text-dark);
+}
+
+/* ── Station box (read-only, matches layout StationBox dimensions) ────────── */
+.dash-box {
+  background-color: #ffffff;
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: var(--card-shadow);
+  height: 160px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  z-index: 5;
+  overflow: hidden;
+}
+
+.dash-box-header {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  background-color: var(--bg-light);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  height: 40px;
+}
+
+.dash-box-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dark);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-box-body {
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex: 1;
+}
+
+/* ── Data grid ───────────────────────────────────────────────────────────── */
+.dash-grid {
+  border-collapse: collapse;
+  width: max-content;
+  table-layout: fixed;
+}
+
+/* Station ID header — 40px wide per station (2 sub-cols × 20px) */
+.dash-grid-th {
+  width: 40px;
+  padding: 3px 2px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: #45b480;
+  border-right: 1px solid #1c4532;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-grid-th:last-child {
+  border-right: none;
+}
+
+/* Z / E row — spans both sub-cols per station */
+.dash-grid-ze {
+  width: 40px;
+  height: 20px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 10px;
+  font-weight: 800;
+  background-color: var(--bg-light);
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  color: transparent;  /* empty = invisible */
+}
+
+.dash-grid-ze:last-child {
+  border-right: none;
+}
+
+/* Z symbol — blue */
+.dash-ze--z {
+  background-color: #ebf8ff;
+  color: #2b6cb0;
+}
+
+/* E symbol — red (priority over Z) */
+.dash-ze--e {
+  background-color: #fff5f5;
+  color: #c53030;
+}
+
+/* Label sub-column (M / P / D / U) */
+.dash-grid-label {
+  width: 14px;
+  min-width: 14px;
+  height: 20px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-gray);
+  background-color: var(--bg-light);
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Value sub-column */
+.dash-grid-value {
+  width: 26px;
+  min-width: 26px;
+  height: 20px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-gray);
+  background-color: #ffffff;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Active value (X > 0) — highlighted */
+.dash-grid-value--active {
+  background-color: #fffaf0;
+  color: #c05621;
+  font-weight: 700;
+}
+
+/* Remove trailing borders on last station column */
+.dash-grid tr td:last-child,
+.dash-grid tr th:last-child {
+  border-right: none;
+}
+
+/* ── Bypass icon (read-only diamond) ─────────────────────────────────────── */
+.dash-bypass {
+  width: 62px;
+  height: 62px;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  background-color: #f7fafc;
+  z-index: 5;
 }
 
-.z-dashboard-placeholder {
-  text-align: center;
-  color: #a0aec0;
+.dash-bypass-diamond {
+  width: 40px;
+  height: 40px;
+  background-color: #ffffff;
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  transform: rotate(45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--card-shadow);
 }
 
-.z-dashboard-icon {
-  font-size: 52px;
-  margin-bottom: 16px;
+.dash-bypass-diamond svg {
+  transform: rotate(-45deg);
+  color: var(--text-gray);
 }
 
-.z-dashboard-placeholder h2 {
-  font-size: 20px;
-  color: #4a5568;
-  margin: 0 0 8px 0;
+/* ── Zoom controls ───────────────────────────────────────────────────────── */
+.dash-zoom-controls {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 50;
 }
 
-.z-dashboard-placeholder p {
-  font-size: 14px;
-  margin: 0;
+.dash-zoom-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  cursor: pointer;
+  color: var(--text-dark);
+  box-shadow: var(--card-shadow);
+  transition: background-color 0.15s;
+}
+
+.dash-zoom-btn:hover {
+  background-color: var(--bg-light);
 }
