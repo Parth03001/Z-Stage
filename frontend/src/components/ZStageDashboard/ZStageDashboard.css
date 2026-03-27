@@ -118,8 +118,22 @@
   transition: background-color 0.15s;
 }
 
-.dash-refresh-btn:hover {
+.dash-refresh-btn:hover:not(:disabled) {
   background-color: var(--bg-light);
+}
+
+.dash-refresh-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@keyframes dash-spin {
+  to { transform: rotate(360deg); }
+}
+
+.dash-spin {
+  animation: dash-spin 0.7s linear infinite;
+  display: inline-block;
 }
 
 /* ── Canvas (same grid background as layout-canvas) ─────────────────────── */

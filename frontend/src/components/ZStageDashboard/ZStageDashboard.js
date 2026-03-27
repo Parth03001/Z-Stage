@@ -376,6 +376,7 @@ function ZStageDashboard() {
   const [connections, setConnections] = useState([]);
   const [records, setRecords]         = useState([]);
   const [loading, setLoading]         = useState(false);
+  const [refreshing, setRefreshing]   = useState(false);
   const [error, setError]             = useState(null);
   const [transformState, setTransformState] = useState({ scale: 1, positionX: 0, positionY: 0 });
 
@@ -424,17 +425,19 @@ function ZStageDashboard() {
   }, [selectedId]);
 
   const handleRefresh = () => {
-    inputApi.getRecords().then((r) => setRecords(r.data)).catch(() => {});
+    setRefreshing(true);
+    const calls = [inputApi.getRecords().then((r) => setRecords(r.data))];
     if (selectedId) {
-      layoutApi.getLayout(selectedId)
-        .then((r) => {
+      calls.push(
+        layoutApi.getLayout(selectedId).then((r) => {
           const state = parseLayout(r.data);
           setBoxes(state.boxes);
           setBypassIcons(state.bypassIcons);
           setConnections(state.connections);
         })
-        .catch(() => {});
+      );
     }
+    Promise.allSettled(calls).finally(() => setRefreshing(false));
   };
 
   // When a record is saved in the popup, update records state so dashboard re-renders
@@ -474,9 +477,9 @@ function ZStageDashboard() {
               <span className="dash-legend-sep" />
               <span className="dash-legend-text dash-legend-hint">X/Y = active / total incidences · Click station header to view records</span>
             </div>
-            <button className="dash-refresh-btn" onClick={handleRefresh} title="Refresh data">
-              <RefreshCw size={13} />
-              Refresh
+            <button className="dash-refresh-btn" onClick={handleRefresh} disabled={refreshing} title="Refresh data">
+              <RefreshCw size={13} className={refreshing ? 'dash-spin' : ''} />
+              {refreshing ? 'Refreshing…' : 'Refresh'}
             </button>
           </div>
         </div>
