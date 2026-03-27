@@ -136,6 +136,50 @@ function LayoutPreparation({
   const [dragging, setDragging] = useState(null);
   const [dragPos, setDragPos] = useState({ x2: 0, y2: 0 });
   const canvasRef = useRef(null);
+  const transformRef = useRef(null);
+
+  // Fit the view so all loaded elements are visible with padding
+  const fitView = useCallback((loadedBoxes, loadedBypassIcons) => {
+    if (!transformRef.current) return;
+    if (loadedBoxes.length === 0 && loadedBypassIcons.length === 0) return;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    loadedBoxes.forEach((box) => {
+      const w = boxSize(box.stationIds?.length ?? 5).w;
+      const h = 4 * GRID; // boxSize height is always 160px
+      minX = Math.min(minX, box.position.x);
+      minY = Math.min(minY, box.position.y);
+      maxX = Math.max(maxX, box.position.x + w);
+      maxY = Math.max(maxY, box.position.y + h);
+    });
+
+    loadedBypassIcons.forEach((icon) => {
+      minX = Math.min(minX, icon.position.x);
+      minY = Math.min(minY, icon.position.y);
+      maxX = Math.max(maxX, icon.position.x + BYPASS_SIZE);
+      maxY = Math.max(maxY, icon.position.y + BYPASS_SIZE);
+    });
+
+    const canvasEl = canvasRef.current;
+    if (!canvasEl) return;
+    const rect = canvasEl.getBoundingClientRect();
+
+    const PAD = 80;
+    const contentW = maxX - minX + PAD * 2;
+    const contentH = maxY - minY + PAD * 2;
+
+    const scale = Math.min(
+      rect.width  / contentW,
+      rect.height / contentH,
+      1, // never zoom in beyond 100%
+    );
+
+    const posX = (rect.width  - contentW * scale) / 2 - (minX - PAD) * scale;
+    const posY = (rect.height - contentH * scale) / 2 - (minY - PAD) * scale;
+
+    transformRef.current.setTransform(posX, posY, scale, 300);
+  }, []);
 
   // Attach window-level mousemove / mouseup only while a connection is being dragged
   useEffect(() => {
@@ -320,10 +364,12 @@ function LayoutPreparation({
       setConnections(rebuilt.connections);
       setLayoutName(data.name);
       setCurrentLayoutId(data.id);
+      // Auto-fit: wait one tick for React to render new positions, then zoom to fit
+      setTimeout(() => fitView(rebuilt.boxes, rebuilt.bypassIcons), 80);
     } catch (err) {
       console.error('Load failed:', err);
     }
-  }, []);
+  }, [fitView]);
 
   // ── Clear all ───────────────────────────────────────────────────────────────
   const handleClearAll = () => {
@@ -399,6 +445,7 @@ function LayoutPreparation({
           }}
         >
           <TransformWrapper
+            ref={transformRef}
             limitToBounds={false}
             minScale={0.15}
             maxScale={3}

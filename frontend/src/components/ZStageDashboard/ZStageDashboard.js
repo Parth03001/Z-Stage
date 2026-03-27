@@ -394,6 +394,46 @@ function ZStageDashboard() {
   // Station detail popup
   const [popupStation, setPopupStation] = useState(null); // stationId string | null
 
+  const canvasRef   = useRef(null);
+  const transformRef = useRef(null);
+
+  const fitView = useCallback((loadedBoxes, loadedBypassIcons) => {
+    if (!transformRef.current) return;
+    if (loadedBoxes.length === 0 && loadedBypassIcons.length === 0) return;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    const BOX_H = 4 * GRID; // 160px — mirrors LayoutPreparation boxSize height
+
+    loadedBoxes.forEach((box) => {
+      const w = Math.max(5, box.stationIds.length) * GRID;
+      minX = Math.min(minX, box.position.x);
+      minY = Math.min(minY, box.position.y);
+      maxX = Math.max(maxX, box.position.x + w);
+      maxY = Math.max(maxY, box.position.y + BOX_H);
+    });
+
+    loadedBypassIcons.forEach((icon) => {
+      minX = Math.min(minX, icon.position.x);
+      minY = Math.min(minY, icon.position.y);
+      maxX = Math.max(maxX, icon.position.x + 62);
+      maxY = Math.max(maxY, icon.position.y + 62);
+    });
+
+    const el = canvasRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+
+    const PAD = 80;
+    const contentW = maxX - minX + PAD * 2;
+    const contentH = maxY - minY + PAD * 2;
+
+    const scale = Math.min(rect.width / contentW, rect.height / contentH, 1);
+    const posX = (rect.width  - contentW * scale) / 2 - (minX - PAD) * scale;
+    const posY = (rect.height - contentH * scale) / 2 - (minY - PAD) * scale;
+
+    transformRef.current.setTransform(posX, posY, scale, 300);
+  }, []);
+
   // Derive all months present in loaded records (same logic as InputData)
   const allMonths = React.useMemo(() => {
     const set = new Set(MONTHLY_KEYS);
@@ -430,10 +470,11 @@ function ZStageDashboard() {
         setBoxes(state.boxes);
         setBypassIcons(state.bypassIcons);
         setConnections(state.connections);
+        setTimeout(() => fitView(state.boxes, state.bypassIcons), 80);
       })
       .catch(() => setError('Failed to load layout'))
       .finally(() => setLoading(false));
-  }, [selectedId]);
+  }, [selectedId, fitView]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -497,6 +538,7 @@ function ZStageDashboard() {
 
         {/* ── Canvas ───────────────────────────────────────────────────────── */}
         <div
+          ref={canvasRef}
           className="dash-canvas"
           style={{
             backgroundSize: `${GRID * transformState.scale}px ${GRID * transformState.scale}px`,
@@ -508,6 +550,7 @@ function ZStageDashboard() {
 
           {!loading && !error && (
             <TransformWrapper
+              ref={transformRef}
               limitToBounds={false}
               minScale={0.15}
               maxScale={3}
