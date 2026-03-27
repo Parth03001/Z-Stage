@@ -165,15 +165,14 @@ function LayoutPreparation({
     if (!canvasEl) return;
     const rect = canvasEl.getBoundingClientRect();
 
-    const PAD = 120;
+    const PAD = 100;
     const contentW = maxX - minX + PAD * 2;
     const contentH = maxY - minY + PAD * 2;
 
-    const scale = Math.min(
-      rect.width  / contentW,
-      rect.height / contentH,
-      1, // never zoom in beyond 100%
-    ) * 0.72; // extra breathing room so nothing is clipped
+    // Use BOTH width and height constraints so a wide/short layout never overflows sideways
+    const scaleByW = rect.width  / contentW;
+    const scaleByH = rect.height / contentH;
+    const scale = Math.min(scaleByW, scaleByH, 1) * 0.62;
 
     const posX = (rect.width  - contentW * scale) / 2 - (minX - PAD) * scale;
     const posY = (rect.height - contentH * scale) / 2 - (minY - PAD) * scale;
