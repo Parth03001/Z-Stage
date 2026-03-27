@@ -312,8 +312,10 @@ function computeStationData(records, stationId) {
   const attrs = {};
   for (const attr of ['P', 'M', 'D', 'U']) {
     const attrRecs = sr.filter((r) => r.attribution === attr);
-    const Y = attrRecs.length;
-    if (Y === 0) continue;
+    // Y = sum of total_incidences across all records for this attribution
+    const Y = attrRecs.reduce((sum, r) => sum + (r.total_incidences || 0), 0);
+    if (Y === 0) continue; // don't show if no incidences at all
+    // X = count of records that individually have total_incidences > 0
     const X = attrRecs.filter((r) => (r.total_incidences || 0) > 0).length;
     attrs[attr] = `${X}/${Y}`;
   }
