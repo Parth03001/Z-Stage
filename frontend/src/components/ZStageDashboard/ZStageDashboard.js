@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Xarrow, { Xwrapper } from 'react-xarrows';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
-import { ZoomIn, ZoomOut, Maximize2, RefreshCw, GitBranch, X, Loader } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, RefreshCw, GitBranch, X, Loader, TableProperties } from 'lucide-react';
 import { layoutApi, inputApi } from '../../api/layoutApi';
 import './ZStageDashboard.css';
 
@@ -55,7 +56,10 @@ function fmtMonth(key) {
 }
 
 // ── Inline editable cell ───────────────────────────────────────────────────────
-function EditableCell({ recordId, fieldKey, value, type, onSaved }) {
+function EditableCell({ recordId, fieldKey, value, type, onSaved, stickyLeft }) {
+  const stickyStyle = stickyLeft !== undefined
+    ? { position: 'sticky', left: stickyLeft, zIndex: 1, backgroundColor: 'inherit' }
+    : {};
   const [editing, setEditing] = useState(false);
   const [draft, setDraft]     = useState(value ?? '');
   const [saving, setSaving]   = useState(false);
@@ -90,11 +94,11 @@ function EditableCell({ recordId, fieldKey, value, type, onSaved }) {
     if (e.key === 'Escape') { setDraft(value ?? ''); setEditing(false); }
   };
 
-  if (saving) return <td className="sdm-cell-saving"><Loader size={12} className="sdm-spin" /></td>;
+  if (saving) return <td className="sdm-cell-saving" style={stickyStyle}><Loader size={12} className="sdm-spin" /></td>;
 
   if (editing) {
     return (
-      <td className="sdm-cell-editing">
+      <td className="sdm-cell-editing" style={stickyStyle}>
         {LONG_TEXT.has(fieldKey) ? (
           <textarea
             ref={inputRef} value={draft} rows={3}
@@ -119,7 +123,7 @@ function EditableCell({ recordId, fieldKey, value, type, onSaved }) {
 
   const display = value ?? '';
   return (
-    <td className="sdm-cell-view" onClick={() => setEditing(true)} title="Click to edit">
+    <td className="sdm-cell-view" style={stickyStyle} onClick={() => setEditing(true)} title="Click to edit">
       {display === '' || display === null
         ? <span className="sdm-cell-empty">—</span>
         : <span>{String(display)}</span>}
@@ -193,6 +197,8 @@ function MonthlyCell({ recordId, monthKey, monthlyData, onSaved }) {
 }
 
 // ── Station Detail Modal ───────────────────────────────────────────────────────
+// Rendered via portal to document.body so position:fixed is always
+// relative to the true viewport, regardless of ancestor transforms.
 function StationDetailModal({ stationId, records, allMonths, onSaved, onClose }) {
   const filtered = records.filter((r) => r.stage_no === stationId);
 
@@ -203,30 +209,52 @@ function StationDetailModal({ stationId, records, allMonths, onSaved, onClose })
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  return (
+  // Prevent body scroll while modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  const modal = (
     <div className="sdm-overlay" onClick={onClose}>
       <div className="sdm-modal" onClick={(e) => e.stopPropagation()}>
 
-        {/* Header */}
+        {/* ── Header ── */}
         <div className="sdm-header">
           <div className="sdm-header-left">
-            <span className="sdm-title">Station: {stationId}</span>
-            <span className="sdm-count">{filtered.length} record{filtered.length !== 1 ? 's' : ''}</span>
+            <div className="sdm-header-icon"><TableProperties size={18} /></div>
+            <div>
+              <div className="sdm-title">Station <span className="sdm-station-id">{stationId}</span></div>
+              <div className="sdm-subtitle">Master data — click any cell to edit</div>
+            </div>
           </div>
-          <button className="sdm-close" onClick={onClose} title="Close"><X size={16} /></button>
+          <div className="sdm-header-right">
+            <span className="sdm-count">{filtered.length} record{filtered.length !== 1 ? 's' : ''}</span>
+            <button className="sdm-close" onClick={onClose} title="Close (Esc)"><X size={16} /></button>
+          </div>
         </div>
 
-        {/* Table */}
+        {/* ── Body ── */}
         <div className="sdm-body">
           {filtered.length === 0 ? (
-            <div className="sdm-empty">No input records found for station <strong>{stationId}</strong>.</div>
+            <div className="sdm-empty">
+              <TableProperties size={36} strokeWidth={1} />
+              <p>No input records found for station <strong>{stationId}</strong>.</p>
+              <p className="sdm-empty-hint">Upload data in the Input section with Stage No = {stationId}</p>
+            </div>
           ) : (
             <div className="sdm-table-wrap">
               <table className="sdm-table">
                 <thead>
                   <tr>
-                    {FIXED_COLS.map((col) => (
-                      <th key={col.key} style={{ minWidth: col.width }}>{col.label}</th>
+                    {FIXED_COLS.map((col, i) => (
+                      <th
+                        key={col.key}
+                        className={i < 3 ? 'sdm-sticky-col' : ''}
+                        style={{ minWidth: col.width, left: i === 0 ? 0 : i === 1 ? 60 : i === 2 ? 190 : undefined }}
+                      >
+                        {col.label}
+                      </th>
                     ))}
                     {allMonths.map((key) => (
                       <th key={key} className="sdm-month-th">{fmtMonth(key)}</th>
@@ -237,9 +265,9 @@ function StationDetailModal({ stationId, records, allMonths, onSaved, onClose })
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((rec) => (
-                    <tr key={rec.id}>
-                      {FIXED_COLS.map((col) => (
+                  {filtered.map((rec, rowIdx) => (
+                    <tr key={rec.id} className={rowIdx % 2 === 0 ? 'sdm-row-even' : 'sdm-row-odd'}>
+                      {FIXED_COLS.map((col, i) => (
                         <EditableCell
                           key={col.key}
                           recordId={rec.id}
@@ -247,6 +275,7 @@ function StationDetailModal({ stationId, records, allMonths, onSaved, onClose })
                           value={rec[col.key]}
                           type={col.type}
                           onSaved={onSaved}
+                          stickyLeft={i < 3 ? (i === 0 ? 0 : i === 1 ? 60 : 190) : undefined}
                         />
                       ))}
                       {allMonths.map((key) => (
@@ -276,9 +305,17 @@ function StationDetailModal({ stationId, records, allMonths, onSaved, onClose })
           )}
         </div>
 
+        {/* ── Footer ── */}
+        <div className="sdm-footer">
+          <span className="sdm-footer-hint">Changes save automatically · Scroll horizontally to see monthly columns</span>
+          <button className="sdm-footer-close" onClick={onClose}>Close</button>
+        </div>
+
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
 
 // ── Parse API layout into flat state ─────────────────────────────────────────

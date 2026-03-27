@@ -357,91 +357,145 @@
   background-color: #2d9c6a;
 }
 
-/* ── Station Detail Modal (SDM) ──────────────────────────────────────────── */
+/* ── Station Detail Modal (SDM) ──────────────────────────────────────────────
+   Rendered via ReactDOM.createPortal to document.body — position:fixed is
+   always relative to the true viewport regardless of parent transforms.
+   ────────────────────────────────────────────────────────────────────────── */
+
 .sdm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
-  padding: 24px;
+  z-index: 9999;
+  padding: 32px 24px;
+  animation: sdm-fade-in 0.15s ease;
+}
+
+@keyframes sdm-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .sdm-modal {
   background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+  border-radius: 12px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28), 0 4px 16px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
-  width: 92vw;
-  max-width: 1400px;
-  max-height: 82vh;
+  width: 94vw;
+  max-width: 1440px;
+  height: 78vh;
   overflow: hidden;
+  animation: sdm-slide-up 0.18s ease;
 }
 
-/* Modal header */
+@keyframes sdm-slide-up {
+  from { transform: translateY(20px); opacity: 0.6; }
+  to   { transform: translateY(0);    opacity: 1;   }
+}
+
+/* ── Modal header ────────────────────────────────────────────────────────── */
 .sdm-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--border-color);
+  padding: 16px 20px;
+  background: linear-gradient(135deg, var(--mahindra-red) 0%, #a01028 100%);
   flex-shrink: 0;
-  background-color: #ffffff;
 }
 
 .sdm-header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+}
+
+.sdm-header-icon {
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
 }
 
 .sdm-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-dark);
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+.sdm-station-id {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.sdm-subtitle {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: 1px;
+}
+
+.sdm-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .sdm-count {
   font-size: 12px;
-  background-color: #ebf8ff;
-  color: #2b6cb0;
-  padding: 2px 8px;
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 3px 10px;
+  border-radius: 12px;
   font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .sdm-close {
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   cursor: pointer;
-  color: #a0aec0;
-  padding: 4px;
+  color: #ffffff;
+  padding: 6px;
   display: flex;
   align-items: center;
-  border-radius: 4px;
-  transition: background-color 0.12s, color 0.12s;
+  border-radius: 6px;
+  transition: background 0.12s;
 }
 
 .sdm-close:hover {
-  background-color: var(--bg-light);
-  color: var(--text-dark);
+  background: rgba(255, 255, 255, 0.3);
 }
 
-/* Modal body — scrollable */
+/* ── Modal body — scrollable ─────────────────────────────────────────────── */
 .sdm-body {
   flex: 1;
-  overflow: auto;
-  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Empty state inside modal */
 .sdm-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   padding: 48px 24px;
   text-align: center;
-  font-size: 14px;
   color: var(--text-gray);
 }
 
@@ -449,8 +503,15 @@
   color: var(--text-dark);
 }
 
-/* Table wrapper */
+.sdm-empty-hint {
+  font-size: 12px;
+  color: #a0aec0;
+  margin: 0;
+}
+
+/* ── Table wrapper ───────────────────────────────────────────────────────── */
 .sdm-table-wrap {
+  flex: 1;
   overflow: auto;
 }
 
@@ -462,55 +523,70 @@
   min-width: 100%;
 }
 
+/* Sticky header */
 .sdm-table thead {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 10;
 }
 
 .sdm-table th {
-  background: #2d3748;
-  color: #e2e8f0;
-  padding: 8px 10px;
+  background: #1e293b;
+  color: #cbd5e1;
+  padding: 9px 11px;
   text-align: left;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 11px;
-  border-right: 1px solid #4a5568;
+  border-right: 1px solid #334155;
+  border-bottom: 2px solid #0f172a;
   white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+
+/* Sticky first 3 columns in header */
+.sdm-sticky-col {
+  position: sticky;
+  z-index: 11 !important;
+  background: #1e293b !important;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.15);
 }
 
 .sdm-month-th {
   min-width: 58px;
   text-align: center;
+  background: #1e3a5f !important;
+  color: #93c5fd !important;
 }
 
-.sdm-table tbody tr:nth-child(even) {
-  background: #f7fafc;
+/* Row styles */
+.sdm-row-even { background: #ffffff; }
+.sdm-row-odd  { background: #f8fafc; }
+
+.sdm-table tbody tr:hover td {
+  background: #eff6ff !important;
 }
 
-.sdm-table tbody tr:hover {
-  background: #ebf8ff;
-}
-
-/* Editable cells */
+/* ── Editable cells ──────────────────────────────────────────────────────── */
 .sdm-cell-view {
-  padding: 6px 10px;
+  padding: 7px 11px;
   border-right: 1px solid #e2e8f0;
   border-bottom: 1px solid #e2e8f0;
   cursor: pointer;
   max-width: 280px;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #2d3748;
-  transition: background 0.1s;
+  color: #1e293b;
+  transition: background 0.08s;
 }
 
 .sdm-cell-view:hover {
-  background: #bee3f8 !important;
+  background: #dbeafe !important;
+  color: #1e40af;
 }
 
 .sdm-cell-empty {
   color: #cbd5e0;
+  font-style: italic;
 }
 
 .sdm-cell-editing {
@@ -522,47 +598,84 @@
 .sdm-cell-input {
   width: 100%;
   min-width: 80px;
-  padding: 4px 6px;
-  border: 1px solid #3182ce;
-  border-radius: 3px;
+  padding: 5px 7px;
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
   font-size: 12px;
   outline: none;
-  background: #fff;
+  background: #eff6ff;
+  color: #1e293b;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .sdm-cell-textarea {
   width: 100%;
   min-width: 200px;
-  padding: 4px 6px;
-  border: 1px solid #3182ce;
-  border-radius: 3px;
+  padding: 5px 7px;
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
   font-size: 12px;
   outline: none;
   resize: vertical;
-  background: #fff;
+  background: #eff6ff;
+  color: #1e293b;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .sdm-cell-saving {
-  padding: 6px 10px;
+  padding: 7px 11px;
   border-right: 1px solid #e2e8f0;
   border-bottom: 1px solid #e2e8f0;
   text-align: center;
-  color: #718096;
+  color: #94a3b8;
 }
 
-/* Monthly cells */
+/* ── Monthly cells ───────────────────────────────────────────────────────── */
 .sdm-monthly {
   text-align: center;
   min-width: 58px;
 }
 
 .sdm-monthly--has {
-  background: #ebf8ff;
-  font-weight: 600;
-  color: #2b6cb0;
+  background: #eff6ff !important;
+  font-weight: 700;
+  color: #1d4ed8;
 }
 
-/* Spinner */
+/* ── Modal footer ────────────────────────────────────────────────────────── */
+.sdm-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-light);
+  flex-shrink: 0;
+}
+
+.sdm-footer-hint {
+  font-size: 11px;
+  color: var(--text-gray);
+  font-style: italic;
+}
+
+.sdm-footer-close {
+  padding: 6px 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--text-dark);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.sdm-footer-close:hover {
+  background: #e2e8f0;
+}
+
+/* ── Spinner ─────────────────────────────────────────────────────────────── */
 @keyframes sdm-spin {
   to { transform: rotate(360deg); }
 }
