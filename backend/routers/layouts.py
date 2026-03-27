@@ -139,17 +139,23 @@ def _execute_snapshot(layout_id: int, payload: schemas.LayoutSnapshotCreate, con
             if row:
                 bypass_map[icon.local_id] = row[0]
 
-        # 5. Insert connections (skip any with unresolvable local IDs)
+        # 5. Insert connections — resolve each endpoint from box_map or bypass_map
         for conn in payload.connections:
-            from_db = box_map.get(conn.from_local_id)
-            to_db = box_map.get(conn.to_local_id)
-            if from_db and to_db:
+            from_box    = box_map.get(conn.from_local_id)
+            from_bypass = None if from_box else bypass_map.get(conn.from_local_id)
+            to_box      = box_map.get(conn.to_local_id)
+            to_bypass   = None if to_box else bypass_map.get(conn.to_local_id)
+
+            # Both endpoints must resolve to something
+            if (from_box or from_bypass) and (to_box or to_bypass):
                 session.execute(
                     text(ConnectionQueries.CREATE_CONNECTION),
                     {
-                        "layout_id": layout_id,
-                        "from_box_id": from_db,
-                        "to_box_id": to_db,
+                        "layout_id":    layout_id,
+                        "from_box_id":    from_box,
+                        "to_box_id":      to_box,
+                        "from_bypass_id": from_bypass,
+                        "to_bypass_id":   to_bypass,
                     },
                 )
 

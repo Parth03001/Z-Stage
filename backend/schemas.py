@@ -68,8 +68,10 @@ class BypassIconOut(BypassIconBase):
 class ConnectionOut(BaseModel):
     id: int
     layout_id: int
-    from_box_id: int
-    to_box_id: int
+    from_box_id: Optional[int] = None
+    to_box_id: Optional[int] = None
+    from_bypass_id: Optional[int] = None
+    to_bypass_id: Optional[int] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

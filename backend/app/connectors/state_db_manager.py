@@ -129,6 +129,11 @@ class StateDBManager:
             "ALTER TABLE station_boxes ADD COLUMN IF NOT EXISTS station_ids TEXT",
             "ALTER TABLE station_boxes ADD COLUMN IF NOT EXISTS z_labels TEXT",
             "ALTER TABLE station_boxes ADD COLUMN IF NOT EXISTS station_data TEXT",
+            # Allow bypass icon endpoints in connections
+            "ALTER TABLE box_connections ALTER COLUMN from_box_id DROP NOT NULL",
+            "ALTER TABLE box_connections ALTER COLUMN to_box_id DROP NOT NULL",
+            "ALTER TABLE box_connections ADD COLUMN IF NOT EXISTS from_bypass_id INTEGER REFERENCES bypass_icons(id) ON DELETE CASCADE",
+            "ALTER TABLE box_connections ADD COLUMN IF NOT EXISTS to_bypass_id INTEGER REFERENCES bypass_icons(id) ON DELETE CASCADE",
         ]
         try:
             with self.engine.connect() as conn:

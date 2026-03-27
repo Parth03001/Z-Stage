@@ -109,8 +109,8 @@ function stateFromApi(apiLayout) {
 
   const connections = apiLayout.connections.map((c) => ({
     id: `db-conn-${c.id}`,
-    fromId: `db-box-${c.from_box_id}`,
-    toId: `db-box-${c.to_box_id}`,
+    fromId: c.from_box_id != null ? `db-box-${c.from_box_id}` : `db-bypass-${c.from_bypass_id}`,
+    toId:   c.to_box_id   != null ? `db-box-${c.to_box_id}`   : `db-bypass-${c.to_bypass_id}`,
   }));
 
   return { boxes, bypassIcons, connections };

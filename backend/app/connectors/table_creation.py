@@ -194,13 +194,25 @@ create_dynamic_table(
             "from_box_id",
             Integer,
             ForeignKey("station_boxes.id", ondelete="CASCADE"),
-            nullable=False,
+            nullable=True,
         ),
         Column(
             "to_box_id",
             Integer,
             ForeignKey("station_boxes.id", ondelete="CASCADE"),
-            nullable=False,
+            nullable=True,
+        ),
+        Column(
+            "from_bypass_id",
+            Integer,
+            ForeignKey("bypass_icons.id", ondelete="CASCADE"),
+            nullable=True,
+        ),
+        Column(
+            "to_bypass_id",
+            Integer,
+            ForeignKey("bypass_icons.id", ondelete="CASCADE"),
+            nullable=True,
         ),
         Column(
             "created_at",
